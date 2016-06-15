@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+
+import m3.ice_simulator
+try:
+    m3.ice_simulator.Simulator().run()
+except KeyboardInterrupt:
+    m3.ice_simulator.logger.info("Caught quit request. Shutting down.")
+
