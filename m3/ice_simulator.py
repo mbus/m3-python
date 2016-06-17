@@ -841,7 +841,12 @@ def create_fake_serial(
                 )
 
     # Hack, b/c socat doesn't exit but do need to wait for pipe to be set up
-    time.sleep(.5)
+    while not os.path.exists(endpoint1):
+        time.sleep(.1)
+    while not os.path.exists(endpoint2):
+        time.sleep(.1)
+
+    logger.debug("Fake serial bridge created.")
 
     atexit.register(destroy_fake_serial)
 
