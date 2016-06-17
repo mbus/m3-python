@@ -52,11 +52,9 @@ injector, and snooper are included with this package.''',
         'entry_points': {
             'console_scripts': [
                 'm3_ice_simulator = m3.ice_simulator:cmd',
+                'm3_ice           = m3.m3_ice:cmd',
                 ],
             },
-        'scripts': [
-            'bin/m3_ice',
-            ],
         }
 
 setup(**config)

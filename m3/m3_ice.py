@@ -2,12 +2,12 @@
 
 import time
 
-from m3.m3_common import m3_common
-from m3.m3_common import mbus_snooper
-from m3.m3_common import ein_programmer
-from m3.m3_common import goc_programmer
+from m3_common import m3_common
+from m3_common import mbus_snooper
+from m3_common import ein_programmer
+from m3_common import goc_programmer
 
-from m3.m3_logging import get_logger
+from m3_logging import get_logger
 logger = get_logger(__name__)
 
 class m3_ice(m3_common):
@@ -100,6 +100,10 @@ class m3_ice(m3_common):
         pass
 
 
-m = m3_ice()
-m.args.func()
+def cmd():
+    m = m3_ice()
+    m.args.func()
+
+if __name__ == '__main__':
+    cmd()
 
