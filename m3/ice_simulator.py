@@ -846,6 +846,12 @@ def create_fake_serial(
     atexit.register(destroy_fake_serial)
 
 
+def cmd():
+    try:
+        Simulator().run()
+    except KeyboardInterrupt:
+        logger.info("Caught quit request. Shutting down.")
+
 if __name__ == '__main__':
     Simulator().run()
 

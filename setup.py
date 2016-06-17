@@ -49,9 +49,13 @@ injector, and snooper are included with this package.''',
             'nose',
             'pyserial',
             ],
+        'entry_points': {
+            'console_scripts': [
+                'm3_ice_simulator = m3.ice_simulator:cmd',
+                ],
+            },
         'scripts': [
-            'bin/m3_ice_simulator',
-            'bin/m3_ice_snoop',
+            'bin/m3_ice',
             ],
         }
 
