@@ -95,6 +95,11 @@ class Simulator(object):
             create_fake_serial()
 
         try:
+            if self.args.serial == _FAKE_SERIAL_SIMULATOR_ENDPOINT:
+                # Workaround for https://github.com/pyserial/pyserial/issues/59
+                #            and https://github.com/pyserial/pyserial/issues/113
+                serial.Serial._update_dtr_state = lambda self : None
+                serial.Serial._update_rts_state = lambda self : None
             self.s = serial.Serial(self.args.serial, 115200)
         except:
             logger.error("Opening serial failed")
