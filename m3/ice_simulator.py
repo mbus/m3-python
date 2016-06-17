@@ -802,7 +802,7 @@ class Gpio(object):
 
 
 _socat_time = str(datetime.datetime.now())
-_socat_fpre = tempfile.gettempdir() + _socat_time + '-'
+_socat_fpre = os.path.join(tempfile.gettempdir(), _socat_time + '-')
 _socat_proc = None
 _socat_devnull = None
 
