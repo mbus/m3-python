@@ -30,8 +30,9 @@ class TestICE(object):
         m3.ice_simulator.create_fake_serial()
 
         os.environ['ICE_NOSLEEP'] = '1'
+        sim_args = m3.ice_simulator.Simulator.get_parser().parse_args([])
         cls.sim_thread = threading.Thread(
-                target=m3.ice_simulator.Simulator().run,
+                target=m3.ice_simulator.Simulator(args=sim_args).run,
                 name='fake_ice',
                 )
         cls.sim_thread.daemon = True
@@ -54,8 +55,8 @@ class TestICE(object):
             logger.warn("test_baudrate skipped on OS X")
             return
         logger.info("Test ?b")
-        TestICE.ice.TestICE.ice_set_baudrate_to_3_megabaud()
-        baud = TestICE.ice.TestICE.ice_get_baudrate()
+        TestICE.ice.ice_set_baudrate_to_3_megabaud()
+        baud = TestICE.ice.ice_get_baudrate()
         if baud != 3000000:
             logger.error("Set/get baudrate mismatch")
             logger.error("Expected 3000000, got " + str(baud))

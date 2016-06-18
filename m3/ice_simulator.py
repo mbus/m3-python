@@ -46,8 +46,11 @@ class UnknownCommandException(Exception):
 
 
 class Simulator(object):
-    def __init__(self):
-        self.parse_cli()
+    def __init__(self, args=None):
+        if args is None:
+            self.parse_cli()
+        else:
+            self.args = args
 
         self.baud_divider = DEFAULT_BAUD_DIVIDER
 
@@ -719,7 +722,8 @@ class Simulator(object):
         self.respond('', ack=False)
 
 
-    def parse_cli(self):
+    @staticmethod
+    def get_parser():
         parser = argparse.ArgumentParser()
 
         parser.add_argument("-i", "--ice-version", default=3, type=int, help="Maximum ICE Version to emulate (1, 2, or 3)")
@@ -730,7 +734,10 @@ class Simulator(object):
         parser.add_argument("-g", "--generate-messages", action="store_true", help="Generate periodic, random MBus messages")
         parser.add_argument("-r", "--replay", default=None, help="Replay a ICE snoop trace")
 
-        self.args = parser.parse_args()
+        return parser
+
+    def parse_cli(self):
+        self.args = Simulator.get_parser().parse_args()
 
 
     def match_mask(self, val, ones, zeros):
@@ -832,6 +839,10 @@ def create_fake_serial(
     global _socat_proc
     global _socat_devnull
 
+    logger.debug("create_fake_serial start")
+    logger.debug(_FAKE_SERIAL_CONNECTTO_ENDPOINT)
+    logger.debug(_FAKE_SERIAL_SIMULATOR_ENDPOINT)
+
     _socat_devnull = open(os.devnull, 'w')
     _socat_proc = subprocess.Popen(
                 "socat -x pty,link={},raw,echo=0 pty,link={},raw,echo=0".format(endpoint1, endpoint2),
@@ -840,11 +851,19 @@ def create_fake_serial(
                 shell=True,
                 )
 
+    logger.debug(str(_socat_proc))
+
     # Hack, b/c socat doesn't exit but do need to wait for pipe to be set up
     limit = time.time() + 5
     while not (os.path.exists(endpoint1) and os.path.exists(endpoint2)):
         time.sleep(.1)
         if time.time() > limit:
+            logger.debug('dafuq?')
+            _socat_proc.kill()
+            for l in open(_socat_fpre + 'socat-stdout'):
+                logger.debug(l)
+            for l in open(_socat_fpre + 'socat-stderr'):
+                logger.debug(l)
             raise NotImplementedError("socat endpoint never appeared?")
 
     logger.debug("Fake serial bridge created.")

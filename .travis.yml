@@ -11,6 +11,11 @@ python:
     #  - "3.5"
     #  - "pypy"
 
+addons:
+  apt:
+    packages:
+      - socat
+
 install: pip install tox-travis
 script: tox
 
