@@ -27,8 +27,6 @@ class TestICE(object):
     def setup_class(cls, serial_port=m3.ice_simulator._FAKE_SERIAL_CONNECTTO_ENDPOINT):
         cls.sim_thread = None
 
-        m3.ice_simulator.create_fake_serial()
-
         os.environ['ICE_NOSLEEP'] = '1'
         sim_args = m3.ice_simulator.Simulator.get_parser().parse_args([])
         cls.sim_thread = threading.Thread(

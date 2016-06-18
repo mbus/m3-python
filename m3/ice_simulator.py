@@ -95,7 +95,8 @@ class Simulator(object):
         self.s_en_event = threading.Event()
 
         if self.args.serial == _FAKE_SERIAL_SIMULATOR_ENDPOINT:
-            create_fake_serial()
+            if not os.path.exists(_FAKE_SERIAL_SIMULATOR_ENDPOINT):
+                create_fake_serial()
 
         try:
             if self.args.serial == _FAKE_SERIAL_SIMULATOR_ENDPOINT:
@@ -824,7 +825,7 @@ def destroy_fake_serial():
     global _socat_devnull
 
     if _socat_proc:
-        _socat_proc.kill()
+        _socat_proc.terminate()
         _socat_proc.wait()
         _socat_proc = None
     if _socat_devnull:
@@ -839,10 +840,6 @@ def create_fake_serial(
     global _socat_proc
     global _socat_devnull
 
-    logger.debug("create_fake_serial start")
-    logger.debug(_FAKE_SERIAL_CONNECTTO_ENDPOINT)
-    logger.debug(_FAKE_SERIAL_SIMULATOR_ENDPOINT)
-
     _socat_devnull = open(os.devnull, 'w')
     _socat_proc = subprocess.Popen(
                 "socat -x pty,link={},raw,echo=0 pty,link={},raw,echo=0".format(endpoint1, endpoint2),
@@ -851,14 +848,11 @@ def create_fake_serial(
                 shell=True,
                 )
 
-    logger.debug(str(_socat_proc))
-
     # Hack, b/c socat doesn't exit but do need to wait for pipe to be set up
     limit = time.time() + 5
     while not (os.path.exists(endpoint1) and os.path.exists(endpoint2)):
         time.sleep(.1)
         if time.time() > limit:
-            logger.debug('dafuq?')
             _socat_proc.kill()
             for l in open(_socat_fpre + 'socat-stdout'):
                 logger.debug(l)
