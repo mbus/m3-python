@@ -174,15 +174,28 @@ class m3_common(object):
         return HEADER + DATA
 
     @staticmethod
-    def build_injection_message(**kwargs):
+    def build_injection_message_for_goc_v1(**kwargs):
         return m3_common._build_injection_message(goc_version=1, **kwargs)
 
     @staticmethod
-    def build_injection_message_interrupt(hexencoded, run_after=True):
+    def build_injection_message_for_goc_v2(**kwargs):
+        return m3_common._build_injection_message(goc_version=2, **kwargs)
+
+
+    @staticmethod
+    def build_injection_message_interrupt_for_goc_v1(hexencoded, run_after=True):
         return m3_common.build_injection_message(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1A00,
+                )
+
+    @staticmethod
+    def build_injection_message_interrupt_for_goc_v2(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v2(
+                hexencoded_data=hexencoded,
+                run_after=run_after,
+                memory_address=0x1E00,
                 )
 
     @staticmethod
@@ -283,19 +296,6 @@ class m3_common(object):
 
         return message
 
-    @staticmethod
-    def build_injection_message_for_goc_v2(**kwargs):
-        return m3_common._build_injection_message(goc_version=2, **kwargs)
-
-
-    @staticmethod
-    def build_injection_message_interrupt_for_goc_v2(hexencoded, run_after=True):
-        return m3_common.build_injection_message_for_goc_v2(
-                hexencoded_data=hexencoded,
-                run_after=run_after,
-                memory_address=0x1E00,
-                )
-
     def __init__(self):
         self.wait_event = threading.Event()
 
@@ -368,6 +368,17 @@ class m3_common(object):
             self.serial_path = self.guess_serial()
         else:
             self.serial_path = self.args.serial
+
+        # XXX This is a bit of a hack
+        if 'goc_version' in self.args:
+            if self.args.goc_version == 1:
+                self.build_injection_message = self.build_injection_message_for_goc_v1
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v1
+            elif self.args.goc_version == 2:
+                self.build_injection_message = self.build_injection_message_for_goc_v2
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v2
+            else:
+                raise NotImplementedError
 
     @staticmethod
     def get_serial_candidates():
@@ -499,6 +510,12 @@ class goc_programmer(object):
                 help="GOC Slow Speed in Hz. The fast speed will be 8x faster."\
                         " Defaults to " + str(goc_programmer.SLOW_FREQ_IN_HZ) + " Hz.",
                         default=goc_programmer.SLOW_FREQ_IN_HZ, type=float)
+
+        parser.add_argument('-V', '--goc-version',
+                help="GOC protocol version. Defaults to 2",
+                default=2,
+                type=int,
+                )
 
         self.subparsers = parser.add_subparsers(
                 title='GOC Commands',
