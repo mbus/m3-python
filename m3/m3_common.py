@@ -109,13 +109,13 @@ class m3_common(object):
             # GOC Version
             goc_version=0,              # Illegal version by default
             ):
-        if goc_version == 0:
+        if goc_version not in (1,2,3):
             raise NotImplementedError("Bad GOC Version?")
 
         if chip_id_mask is None:
             if goc_version == 1:
                 chip_id_mask = 0
-            elif goc_version == 2:
+            elif goc_version in (2,3):
                 chip_id_mask = 0xF
 
         HEADER = ''
@@ -150,7 +150,10 @@ class m3_common(object):
         header_parity = 0
         for byte in [HEADER[x:x+2] for x in xrange(0, len(HEADER), 2)]:
             byte = int(byte, 16)
-            header_parity ^= byte
+            if goc_version in (1,2):
+                header_parity ^= byte
+            elif goc_version == 3:
+                header_parity = (header_parity + byte) & 0xFF
         HEADER += "%02X" % (header_parity)
 
         DATA = ''
@@ -164,7 +167,10 @@ class m3_common(object):
             data_parity = 0
             for byte in [DATA[x:x+2] for x in xrange(0, len(DATA), 2)]:
                 b = int(byte, 16)
-                data_parity ^= b
+                if goc_version in (1,2):
+                    data_parity ^= b
+                elif goc_version == 3:
+                    data_parity = (data_parity + b) & 0xFF
 
             if goc_version == 1:
                 DATA = '%02X' % (data_parity) + DATA
@@ -181,6 +187,9 @@ class m3_common(object):
     def build_injection_message_for_goc_v2(**kwargs):
         return m3_common._build_injection_message(goc_version=2, **kwargs)
 
+    @staticmethod
+    def build_injection_message_for_goc_v3(**kwargs):
+        return m3_common._build_injection_message(goc_version=3, **kwargs)
 
     @staticmethod
     def build_injection_message_interrupt_for_goc_v1(hexencoded, run_after=True):
@@ -193,6 +202,14 @@ class m3_common(object):
     @staticmethod
     def build_injection_message_interrupt_for_goc_v2(hexencoded, run_after=True):
         return m3_common.build_injection_message_for_goc_v2(
+                hexencoded_data=hexencoded,
+                run_after=run_after,
+                memory_address=0x1E00,
+                )
+
+    @staticmethod
+    def build_injection_message_interrupt_for_goc_v3(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v3(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1E00,
@@ -377,6 +394,9 @@ class m3_common(object):
             elif self.args.goc_version == 2:
                 self.build_injection_message = self.build_injection_message_for_goc_v2
                 self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v2
+            elif self.args.goc_version == 3:
+                self.build_injection_message = self.build_injection_message_for_goc_v3
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v3
             else:
                 raise NotImplementedError
 
