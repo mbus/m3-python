@@ -551,8 +551,9 @@ class goc_programmer(object):
         self.parser_off.set_defaults(func=self.cmd_off)
 
         self.parser_message = self.subparsers.add_parser('message',
-                description='WARN: NOT IMPLEMENTED YET',
-                help="Send mbus message [WARN: NOT IMPLEMENTED YET]")
+                help="Send mbus message")
+        self.parser_message.add_argument('MESSAGE',
+                help="Message to send as a hex string (e.g. a512345678)")
         self.parser_message.set_defaults(func=self.cmd_message)
 
         self.parser_flash = self.subparsers.add_parser('flash',
@@ -568,16 +569,35 @@ class goc_programmer(object):
     def cmd_off(self):
         self.m3_ice.ice.goc_set_onoff(False)
 
-    def cmd_message(self):
-        raise NotImplementedError
-
-    def cmd_flash(self):
-        self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
-
+    def _generic_startup(self):
         self.m3_ice.dont_do_default("Run power-on sequence", self.m3_ice.power_on)
         self.m3_ice.dont_do_default("Reset M3", self.m3_ice.reset_m3)
         logger.info("** Setting ICE MBus controller to slave mode")
         self.m3_ice.ice.mbus_set_master_onoff(False)
+
+    def cmd_message(self):
+        data = self.m3_ice.args.MESSAGE
+        data = data.replace('0x', '')
+        if len(data) % 2 == 1:
+            data = '0' + data
+        message = self.m3_ice.build_injection_message(hexencoded_data=data)
+
+        self._generic_startup()
+
+        self.set_slow_frequency()
+        self.wake_chip()
+        self.set_fast_frequency()
+
+        logger.debug("Sending: " + message)
+        self.send_goc_message(message)
+
+        logger.info("")
+        logger.info("Message sent.")
+
+    def cmd_flash(self):
+        self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
+
+        self._generic_startup()
 
         logger.info("")
         logger.info("Would you like to run after programming? If you do not")
