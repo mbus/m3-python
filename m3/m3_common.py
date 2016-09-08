@@ -398,7 +398,7 @@ class m3_common(object):
                 self.build_injection_message = self.build_injection_message_for_goc_v3
                 self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v3
             else:
-                raise NotImplementedError
+                raise NotImplementedError("Bad GOC version?")
 
     @staticmethod
     def get_serial_candidates():
