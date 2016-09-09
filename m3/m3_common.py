@@ -537,6 +537,12 @@ class goc_programmer(object):
                 type=int,
                 )
 
+        parser.add_argument('-d', '--delay',
+                help="Delay (in seconds) between passcode and message. Default: 1s.",
+                default=1,
+                type=float,
+                )
+
         self.subparsers = parser.add_subparsers(
                 title='GOC Commands',
                 description='GOC Actions supported by the ICE board',
@@ -575,6 +581,13 @@ class goc_programmer(object):
         logger.info("** Setting ICE MBus controller to slave mode")
         self.m3_ice.ice.mbus_set_master_onoff(False)
 
+        self.set_slow_frequency()
+        self.wake_chip()
+        if self.m3_ice.args.delay:
+            logger.info("Delaying {}s after passcode".format(self.m3_ice.args.delay))
+            printing_sleep(self.m3_ice.args.delay)
+        self.set_fast_frequency()
+
     def cmd_message(self):
         data = self.m3_ice.args.MESSAGE
         data = data.replace('0x', '')
@@ -583,10 +596,6 @@ class goc_programmer(object):
         message = self.m3_ice.build_injection_message(hexencoded_data=data)
 
         self._generic_startup()
-
-        self.set_slow_frequency()
-        self.wake_chip()
-        self.set_fast_frequency()
 
         logger.debug("Sending: " + message)
         self.send_goc_message(message)
@@ -597,8 +606,6 @@ class goc_programmer(object):
     def cmd_flash(self):
         self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
 
-        self._generic_startup()
-
         logger.info("")
         logger.info("Would you like to run after programming? If you do not")
         logger.info("have GOC start the program, you will be prompted to send")
@@ -608,9 +615,7 @@ class goc_programmer(object):
         self.m3_ice.do_default("Run program when programming finishes?",
                 lambda: setattr(self.m3_ice, 'run_after', True))
 
-        self.set_slow_frequency()
-        self.wake_chip()
-        self.set_fast_frequency()
+        self._generic_startup()
 
         message = self.m3_ice.build_injection_message(hexencoded_data=self.m3_ice.hexencoded, run_after=self.m3_ice.run_after)
         logger.debug("Sending: " + message)
