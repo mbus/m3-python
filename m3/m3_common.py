@@ -138,7 +138,7 @@ class m3_common(object):
         # Program Lengh
         if hexencoded_data is not None:
             length = len(hexencoded_data) >> 3   # hex exapnded -> bytes, /2
-            if goc_version == 2:
+            if goc_version in (2,3):
                 length -= 1
                 assert length >= 0
             length = socket.htons(length)
