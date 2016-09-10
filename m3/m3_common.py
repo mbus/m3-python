@@ -158,7 +158,7 @@ class m3_common(object):
 
         DATA = ''
         if hexencoded_data is not None:
-            if goc_version == 2:
+            if goc_version in (2,3):
                 DATA += "%08X" % (memory_address)
 
             DATA += hexencoded_data
