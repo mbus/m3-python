@@ -558,8 +558,10 @@ class goc_programmer(object):
 
         self.parser_message = self.subparsers.add_parser('message',
                 help="Send mbus message")
+        self.parser_message.add_argument('ADDRESS',
+                help="Address to send to as a hex string (e.g. a5)")
         self.parser_message.add_argument('MESSAGE',
-                help="Message to send as a hex string (e.g. a512345678)")
+                help="Message to send as a hex string (e.g. 12345678)")
         self.parser_message.set_defaults(func=self.cmd_message)
 
         self.parser_flash = self.subparsers.add_parser('flash',
@@ -589,11 +591,25 @@ class goc_programmer(object):
         self.set_fast_frequency()
 
     def cmd_message(self):
+        addr = self.m3_ice.args.ADDRESS
+        addr = addr.replace('0x', '')
+        if len(addr) == 1:
+            addr = '0' + addr
+        if len(addr) not in (2, 8):
+            raise NotImplementedError("Illegal address?")
+
         data = self.m3_ice.args.MESSAGE
         data = data.replace('0x', '')
         if len(data) % 2 == 1:
             data = '0' + data
-        message = self.m3_ice.build_injection_message(hexencoded_data=data)
+
+        # Flip the order of data bytes
+        # TODO: The encode/decode at various points is a bit silly?
+        data = data.decode('hex')
+        data = data[::-1]
+        data = data.encode('hex')
+
+        message = self.m3_ice.build_injection_message(hexencoded_data=addr+data)
 
         self._generic_startup()
 
