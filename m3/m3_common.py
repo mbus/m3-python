@@ -562,6 +562,9 @@ class goc_programmer(object):
                 help="Address to send to as a hex string (e.g. a5)")
         self.parser_message.add_argument('MESSAGE',
                 help="Message to send as a hex string (e.g. 12345678)")
+        self.parser_message.add_argument('-R', '--dont-run-after',
+                action='store_true',
+                help="By default, message commands set the run_after bit. Unset it")
         self.parser_message.set_defaults(func=self.cmd_message)
 
         self.parser_flash = self.subparsers.add_parser('flash',
@@ -615,7 +618,15 @@ class goc_programmer(object):
         data = data[::-1]
         data = data.encode('hex')
 
-        message = self.m3_ice.build_injection_message(hexencoded_data=addr+data)
+        if self.m3_ice.args.dont_run_after:
+            run_after = False
+        else:
+            run_after = True
+
+        message = self.m3_ice.build_injection_message(
+                hexencoded_data=addr+data,
+                run_after=run_after,
+                )
 
         self._generic_startup()
 
