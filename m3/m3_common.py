@@ -598,6 +598,12 @@ class goc_programmer(object):
         if len(addr) not in (2, 8):
             raise NotImplementedError("Illegal address?")
 
+        # Flip the order of address bytes
+        # TODO: The encode/decode at various points is a bit silly?
+        addr = addr.decode('hex')
+        addr = addr[::-1]
+        addr = addr.encode('hex')
+
         data = self.m3_ice.args.MESSAGE
         data = data.replace('0x', '')
         if len(data) % 2 == 1:
