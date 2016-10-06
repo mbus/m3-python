@@ -596,16 +596,7 @@ class goc_programmer(object):
     def cmd_message(self):
         addr = self.m3_ice.args.ADDRESS
         addr = addr.replace('0x', '')
-        if len(addr) == 1:
-            addr = '0' + addr
-        if len(addr) not in (2, 8):
-            raise NotImplementedError("Illegal address?")
-
-        # Flip the order of address bytes
-        # TODO: The encode/decode at various points is a bit silly?
-        addr = addr.decode('hex')
-        addr = addr[::-1]
-        addr = addr.encode('hex')
+        addr = int(addr, 16)
 
         data = self.m3_ice.args.MESSAGE
         data = data.replace('0x', '')
@@ -624,7 +615,8 @@ class goc_programmer(object):
             run_after = True
 
         message = self.m3_ice.build_injection_message(
-                hexencoded_data=addr+data,
+                memory_address=addr,
+                hexencoded_data=data,
                 run_after=run_after,
                 )
 
