@@ -596,6 +596,11 @@ class goc_programmer(object):
     def cmd_message(self):
         addr = self.m3_ice.args.ADDRESS
         addr = addr.replace('0x', '')
+        # Flip the order of addr bytes to make human entry friendly
+        # TODO: The encode/decode at various points is a bit silly?
+        addr = addr.decode('hex')
+        addr = addr[::-1]
+        addr = addr.encode('hex')
         addr = int(addr, 16)
 
         data = self.m3_ice.args.MESSAGE
