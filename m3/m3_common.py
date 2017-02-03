@@ -351,7 +351,7 @@ class m3_common(object):
         if len(msg) == 0:
             logger.debug("Ignore msg of len 0")
             return
-        callback_q.put(msg)
+        self.callback_q.put(msg)
 
     def print_banner(self):
         logger.info("-" * 80)
