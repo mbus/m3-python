@@ -114,7 +114,7 @@ class Simulator(object):
             raise
         if not self.s.isOpen():
             logger.error('Could not open serial port at: ' + self.args.serial)
-            raise IOError, "Failed to open serial port"
+            raise IOError("Failed to open serial port")
 
 
         self.event = 0
@@ -502,7 +502,7 @@ class Simulator(object):
                                 ("off", "on")[self.mbus_ismaster])
                         self.respond(chr(self.mbus_ismaster))
                     elif msg[0] == 'c':
-                        raise NotImplementedError, "MBus clock not defined"
+                        raise NotImplementedError("MBus clock not defined")
                     elif msg[0] == 'i':
                         logger.info("Responded to query for MBus should interrupt (%d)",
                                 self.mbus_should_interrupt)
@@ -556,7 +556,7 @@ class Simulator(object):
                         logger.info("MBus master mode set " + ("off", "on")[self.mbus_ismaster])
                         self.ack()
                     elif msg[0] == 'c':
-                        raise NotImplementedError, "MBus clock not defined"
+                        raise NotImplementedError("MBus clock not defined")
                     elif msg[0] == 'i':
                         self.mbus_should_interrupt = ord(msg[1])
                         logger.info("MBus should interrupt set to %d", self.mbus_should_interrupt)
@@ -779,7 +779,7 @@ class Gpio(object):
         elif self.direction == Gpio.GPIO_TRISTATE:
             s += 'TRI'
         else:
-            raise RuntimeError, "wtf"
+            raise RuntimeError("impossible gpio direction")
 
         s += ' - '
 
@@ -799,13 +799,13 @@ class Gpio(object):
     def __setattr__(self, name, value):
         if name is 'direction':
             if value not in (Gpio.GPIO_INPUT, Gpio.GPIO_OUTPUT, Gpio.GPIO_TRISTATE):
-                raise ValueError, "Attempt to set illegal direction", value
+                raise ValueError("Attempt to set illegal direction {}".format(value))
         if name is 'level':
             if value not in (True, False):
-                raise ValueError, "GPIO level must be true or false. Got", value
+                raise ValueError("GPIO level must be true or false. Got {}".format(value))
         if name is 'interrupt':
             if value not in (True, False):
-                raise ValueError, "GPIO interrupt must be true or false. Got", value
+                raise ValueError("GPIO interrupt must be true or false. Got {}".format(value))
         object.__setattr__(self, name, value)
 
 
