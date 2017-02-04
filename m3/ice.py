@@ -2,6 +2,9 @@
 
 ################################################################################
 
+# Coerce Py2k to act more like Py3k
+from __future__ import (division, print_function)
+
 import sys
 import errno
 import socket
@@ -668,22 +671,22 @@ class ICE(object):
     @min_proto_version("0.2")
     @capability('_')
     def ice_set_baudrate_to_230400(self):
-        self.ice_set_baudrate(0x00AE/2, 115200*2)
+        self.ice_set_baudrate(0x00AE//2, 115200*2)
 
     @min_proto_version("0.2")
     @capability('_')
     def ice_set_baudrate_to_460800(self):
-        self.ice_set_baudrate(0x00AE/4, 115200*4)
+        self.ice_set_baudrate(0x00AE//4, 115200*4)
 
     @min_proto_version("0.2")
     @capability('_')
     def ice_set_baudrate_to_921600(self):
-        self.ice_set_baudrate(0x00AE/8, 115200*8)
+        self.ice_set_baudrate(0x00AE//8, 115200*8)
 
     @min_proto_version("0.2")
     @capability('_')
     def ice_set_baudrate_to_1843200(self):
-        self.ice_set_baudrate(0x00AE/16, 115200*16)
+        self.ice_set_baudrate(0x00AE//16, 115200*16)
 
     @min_proto_version("0.2")
     @capability('_')
@@ -973,7 +976,7 @@ class ICE(object):
         elif speed > 400:
             speed = 400
 
-        speed /= 2
+        speed //= 2
         ack,msg = self.send_message('i', struct.pack("BB", ord('c'), speed))
 
         if ack == 0:
