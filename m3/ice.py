@@ -1046,9 +1046,9 @@ class ICE(object):
 
         Long messages may be fragmented between the ICE library and the ICE
         FPGA. On the wire, this should not be noticeable as the PC<-->ICE bridge
-        is much faster than the MBus. If this is an issue, you must keep the
-        transaction size below the ICE fragmentation limit (less than 255 bytes
-        for combined address + data).
+        (3 MBaud) is much faster than the MBus. If this is an issue, you must
+        keep the transaction size below the ICE fragmentation limit (less than
+        255 bytes for combined address + data).
         '''
         self.min_version(0.2)
         if len(addr) > 4:
