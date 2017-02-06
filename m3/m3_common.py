@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+# Coerce Py2k to act more like Py3k
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+from builtins import (
+        ascii, bytes, chr, dict, filter, hex, input, int, isinstance, list, map,
+        next, object, oct, open, pow, range, round, str, super, zip,
+        )
 
 import argparse
 import atexit
@@ -16,12 +21,12 @@ import threading
 # if Py2K:
 import imp
 
-from m3_logging import get_logger
-logger = get_logger(__name__)
+from . import m3_logging
+logger = m3_logging.get_logger(__name__)
 logger.debug('Got m3_common.py logger')
 
-from ice import ICE
-from ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
+from .ice import ICE
+from .ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
 
 # Do this after ICE since ICE prints a nice help if pyserial is missing
 import serial.tools.list_ports
