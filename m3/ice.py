@@ -3,7 +3,7 @@
 ################################################################################
 
 # Coerce Py2k to act more like Py3k
-from __future__ import (division, print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function, unicode_literals)
 from builtins import (
         ascii, bytes, chr, dict, filter, hex, input, int, isinstance, list, map,
         next, object, oct, open, pow, range, round, str, super, zip,
@@ -18,7 +18,7 @@ import struct
 import sys
 import time
 
-import m3_logging
+from . import m3_logging
 logger = m3_logging.get_logger(__name__)
 logger.debug('Got ice.py logger')
 
