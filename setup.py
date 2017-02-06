@@ -44,8 +44,8 @@ injector, and snooper are included with this package.''',
             "Topic :: Software Development :: Embedded Systems",
             ],
 
-
         'install_requires': [
+            'future',
             'nose',
             'pyserial',
             ],

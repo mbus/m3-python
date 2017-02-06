@@ -3,15 +3,20 @@
 ################################################################################
 
 # Coerce Py2k to act more like Py3k
-from __future__ import (division, print_function)
+from __future__ import (division, print_function, unicode_literals)
+from builtins import (
+        ascii, bytes, chr, dict, filter, hex, input, int, isinstance, list, map,
+        next, object, oct, open, pow, range, round, str, super, zip,
+        )
 
-import sys
+import binascii
+from copy import copy
 import errno
+import functools
 import socket
 import struct
+import sys
 import time
-from copy import copy
-import functools
 
 import m3_logging
 logger = m3_logging.get_logger(__name__)
@@ -492,8 +497,14 @@ class ICE(object):
 
 
     def send_message(self, msg_type, msg='', length=None):
+        if type(msg_type) != bytes:
+            msg_type = bytes(msg_type, 'utf-8')
+
         if len(msg_type) != 1:
-            raise self.FormatError("msg_type must be exactly 1 character")
+            raise self.FormatError("msg_type must be exactly 1 byte")
+
+        if type(msg) != bytes:
+            msg = bytes(msg, 'utf-8')
 
         if len(msg) > 255:
             raise self.FormatError("msg too long. Maximum msg is 255 bytes")
@@ -503,7 +514,7 @@ class ICE(object):
 
         buf = struct.pack("BBB", ord(msg_type), self.event_id, length)
         self.event_id = (self.event_id + 1) % 256
-        logger.debug('Sending %s', (buf+msg).encode('hex'))
+        logger.debug('Sending %s', binascii.hexlify(buf+msg))
         self.dev.write(buf + msg)
 
         # Ugly hack so python allows keyboard interrupts
@@ -1037,8 +1048,7 @@ class ICE(object):
         Sends an MBus message.
 
         Addr may be a short address or long address. In either case, it should
-        be packed binary data (e.g. struct.pack or 'a5'.decode('hex'))
-        Data should be packed binary data, as returned by struct.pack
+        be packed binary data (e.g. struct.pack or binascii.unhexlify('a5'))
 
         The return value is the number of bytes actually sent *including four
         bytes for the address, regardless of whether a short or long address was
@@ -1051,10 +1061,13 @@ class ICE(object):
         255 bytes for combined address + data).
         '''
         self.min_version(0.2)
+        if type(addr) != bytes:
+            addr = bytes(addr, 'utf-8')
         if len(addr) > 4:
             raise self.FormatError("Address too long")
         while len(addr) < 4:
-            addr = '\x00' + addr
+            zero = bytes(1)
+            addr = zero + addr
         msg = addr + data
         return self._fragment_sender('b', msg)
 
