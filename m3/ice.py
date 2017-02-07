@@ -353,7 +353,8 @@ class ICE(object):
             o = bool(ones & (1 << l))
             z = bool(zeros & (1 << l))
             if o and z:
-                raise self.FormatError("masks_to_strings has req 1 and req 0?")
+                raise self.FormatError("masks_to_strings has req 1 and req 0." +
+                        "ones {} zeros {} length {} l {}".format(ones, zeros, length, l))
             if o:
                 s = '1' + s
             elif z:
