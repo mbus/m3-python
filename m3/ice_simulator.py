@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+# Coerce Py2k to act more like Py3k
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+from builtins import (
+        ascii, bytes, chr, dict, filter, hex, input, int, isinstance, list, map,
+        next, object, oct, open, pow, range, round, str, super, zip,
+        )
+
 CAPABILITES = "?_dIifOoBbMmeGgPp"
 MAX_GPIO = 24
 DEFAULT_BAUD_DIVIDER = 0x00AE
@@ -23,11 +30,13 @@ DEFAULT_MBUS_SNOOP_BROADCAST_MASK_ZEROS = 0x0f
 
 import argparse
 import atexit
+import binascii
 import datetime
 import os
 import platform
 import random
 import serial
+import struct
 import subprocess
 import sys
 import tempfile
@@ -36,10 +45,10 @@ import threading
 import traceback
 
 
-import m3_logging
+from . import m3_logging
 logger = m3_logging.get_logger(__name__)
 
-from ice import ICE
+from .ice import ICE
 
 class UnknownCommandException(Exception):
     pass
@@ -146,17 +155,17 @@ class Simulator(object):
     def spurious_message_thread(self):
         def send_snoop(addr, data, control):
             with self.s_lock:
-                self.s.write('B')
-                self.s.write(chr(self.event))
+                self.s.write(bytes('B', 'utf-8'))
+                self.s.write(bytes((self.event,)))
                 self.event += 1
                 self.event %= 256
 
-                addr = addr.decode('hex')
-                data = data.decode('hex')
-                control = control.decode('hex')
+                addr = binascii.unhexlify(addr)
+                data = binascii.unhexlify(data)
+                control = binascii.unhexlify(control)
                 length = len(addr) + len(data) + len(control)
 
-                self.s.write(chr(length))
+                self.s.write(bytes((length,)))
                 self.s.write(addr)
                 self.s.write(data)
                 self.s.write(control)
@@ -178,17 +187,17 @@ class Simulator(object):
     def replay_message_thread(self):
         def send_snoop(addr, data, control):
             with self.s_lock:
-                self.s.write('B')
-                self.s.write(chr(self.event))
+                self.s.write(bytes('B', 'utf-8'))
+                self.s.write(bytes((self.event,)))
                 self.event += 1
                 self.event %= 256
 
-                addr = addr.decode('hex')
-                data = data.decode('hex')
-                control = control.decode('hex')
+                addr = binascii.unhexlify(addr)
+                data = binascii.unhexlify(data)
+                control = binascii.unhexlify(control)
                 length = len(addr) + len(data) + len(control)
 
-                self.s.write(chr(length))
+                self.s.write(bytes((length,)))
                 self.s.write(addr)
                 self.s.write(data)
                 self.s.write(control)
@@ -220,11 +229,11 @@ class Simulator(object):
 
 
     def main_loop(self):
-        self.i2c_msg = ''
+        self.i2c_msg = bytes()
         self.i2c_match = True
-        self.flow_msg = ''
-        self.ein_msg = ''
-        self.mbus_msg = ''
+        self.flow_msg = bytes()
+        self.ein_msg = bytes()
+        self.mbus_msg = bytes()
         while True:
             def min_proto(proto):
                 if minor < proto:
@@ -275,7 +284,7 @@ class Simulator(object):
                         self.respond(CAPABILITES)
                     elif msg[0] == 'b':
                         logger.info("Responded to query for ICE baudrate (divider: 0x%04X)" % (self.baud_divider))
-                        self.respond(chr((self.baud_divider >> 8) & 0xff) + chr(self.baud_divider & 0xff))
+                        self.respond(struct.pack('>H', self.baud_divider))
                     else:
                         logger.error("Bad '?' subtype: " + msg[0])
                         raise UnknownCommandException
@@ -314,8 +323,8 @@ class Simulator(object):
                     self.mbus_msg += msg
                     if len(msg) != 255:
                         logger.info("Got a MBus message:")
-                        logger.info("   message: " + self.mbus_msg.encode('hex'))
-                        self.mbus_msg = ''
+                        logger.info("   message: " + binascii.hexlify(self.mbus_msg))
+                        self.mbus_msg = bytes()
                         if self.mbus_should_interrupt:
                             logger.info("Message would have interrupted")
                             if self.mbus_should_interrupt == 1:
@@ -333,14 +342,14 @@ class Simulator(object):
                         if not self.match_mask(ord(msg[0]), self.i2c_mask_ones, self.i2c_mask_zeros):
                             logger.info("I2C address %02x did not match mask %02x %02x",
                                     ord(msg[0]), self.i2c_mask_ones, self.i2c_mask_zeros)
-                            self.respond(chr(0), ack=False)
+                            self.respond(struct.pack('B', 0), ack=False)
                             continue
                         self.i2c_match = True
                     if len(msg) != 255:
                         logger.info("Got i2c message:")
-                        logger.info("  addr: " + self.i2c_msg[0].encode('hex'))
-                        logger.info("  data: " + self.i2c_msg[1:].encode('hex'))
-                        self.i2c_msg = ''
+                        logger.info("  addr: " + binascii.hexlify(self.i2c_msg[0:1]))
+                        logger.info("  data: " + binascii.hexlify(self.i2c_msg[1:]))
+                        self.i2c_msg = bytes()
                         self.i2c_match = False
                     else:
                         logger.debug("Got i2c fragment")
@@ -350,8 +359,8 @@ class Simulator(object):
                     self.ein_msg += msg
                     if len(msg) != 255:
                         logger.info("Got a EIN message:")
-                        logger.info("  message: " + self.ein_msg.encode('hex'))
-                        self.ein_msg = ''
+                        logger.info("  message: " + binascii.hexlify(self.ein_msg))
+                        self.ein_msg = bytes()
                     else:
                         logger.debug("Got EIN fragment")
                     self.ack()
@@ -359,8 +368,8 @@ class Simulator(object):
                     self.flow_msg += msg
                     if len(msg) != 255:
                         logger.info("Got f-type message in %s mode:", ('EIN','GOC')[ein_goc_toggle])
-                        logger.info("  message: " + self.flow_msg.encode('hex'))
-                        self.flow_msg = ''
+                        logger.info("  message: " + binascii.hexlify(self.flow_msg))
+                        self.flow_msg = bytes()
                     else:
                         logger.debug("Got f-type fragment in %s mode", ('EIN','GOC')[ein_goc_toggle])
                     if ein_goc_toggle:
@@ -376,10 +385,10 @@ class Simulator(object):
                     if minor == 1:
                         if msg[0] == 'l':
                             logger.info("Responded to request for GPIO %d Dir (%s)", ord(msg[1]), self.gpios[ord(msg[1])])
-                            self.respond(chr(self.gpios[ord(msg[1])].level))
+                            self.respond(struct.pack("B", self.gpios[ord(msg[1])].level))
                         elif msg[0] == 'd':
                             logger.info("Responded to request for GPIO %d Level (%s)", ord(msg[1]), self.gpios[ord(msg[1])])
-                            self.respond(chr(self.gpios[ord(msg[1])].direction))
+                            self.respond(struct.pack("B", self.gpios[ord(msg[1])].direction))
                         else:
                             logger.error("bad 'G' subtype: " + msg[0])
                             raise Exception
@@ -389,19 +398,19 @@ class Simulator(object):
                             for i in xrange(len(self.gpios)):
                                 mask |= (self.gpios[i].level << i)
                             logger.info("Responded to request for GPIO level mask (%06x)", mask)
-                            self.respond(chr((mask >> 16) & 0xff) + chr((mask >> 8) & 0xff) + chr(mask >> 8))
+                            self.respond(struct.pack('>I', mask)[1:])
                         elif msg[0] == 'd':
                             mask = 0
                             for i in xrange(len(self.gpios)):
                                 mask |= (self.gpios[i].direction << i)
                             logger.info("Responded to request for GPIO direction mask (%06x)", mask)
-                            self.respond(chr((mask >> 16) & 0xff) + chr((mask >> 8) & 0xff) + chr(mask >> 8))
+                            self.respond(struct.pack('>I', mask)[1:])
                         elif msg[0] == 'i':
                             mask = 0
                             for i in xrange(len(self.gpios)):
                                 mask |= (self.gpios[i].interrupt << i)
                             logger.info("Responded to request for GPIO interrupt mask (%06x)", mask)
-                            self.respond(chr((mask >> 16) & 0xff) + chr((mask >> 8) & 0xff) + chr(mask >> 8))
+                            self.respond(struct.pack('>I', mask)[1:])
                         else:
                             logger.error("bad 'G' subtype: " + msg[0])
                             raise Exception
@@ -447,11 +456,11 @@ class Simulator(object):
                 elif msg_type == 'I':
                     if msg[0] == 'c':
                         logger.info("Responded to query for I2C bus speed (%d kHz)", self.i2c_speed_in_khz)
-                        self.respond(chr(self.i2c_speed_in_khz / 2))
+                        self.respond(struct.pack("B", self.i2c_speed_in_khz // 2))
                     elif msg[0] == 'a':
                         logger.info("Responded to query for ICE I2C mask (%02x ones %02x zeros)",
                                 self.i2c_mask_ones, self.i2c_mask_zeros)
-                        self.respond(chr(self.i2c_mask_ones) + chr(self.i2c_mask_zeros))
+                        self.respond((self.i2c_mask_ones, self.i2c_mask_zeros))
                     else:
                         logger.error("bad 'I' subtype: " + msg[0])
                         raise Exception
@@ -474,47 +483,47 @@ class Simulator(object):
                     if msg[0] == 'l':
                         logger.info("Responded to query for MBus full prefix mask (%06x ones %06x zeros)",
                                 self.mbus_full_prefix_ones, self.mbus_full_prefix_zeros)
-                        r = chr((self.mbus_full_prefix_ones >> 16) & 0xff)
-                        r += chr((self.mbus_full_prefix_ones >> 8) & 0xff)
-                        r += chr((self.mbus_full_prefix_ones >> 0) & 0xff)
-                        r += chr((self.mbus_full_prefix_zeros >> 16) & 0xff)
-                        r += chr((self.mbus_full_prefix_zeros >>  8) & 0xff)
-                        r += chr((self.mbus_full_prefix_zeros >>  0) & 0xff)
+                        r = struct.pack('>I', self.mbus_full_prefix_ones)[1:]
+                        r += struct.pack('>I', self.mbus_full_prefix_zeros)[1:]
                         self.respond(r)
                     elif msg[0] == 's':
                         logger.info("Responded to query for MBus short prefix (%02x)",
                                 self.mbus_short_prefix)
-                        self.respond(chr(self.mbus_short_prefix))
+                        self.respond(struct.pack("B", self.mbus_short_prefix))
                     elif msg[0] == 'S':
                         logger.info("Responded to query for MBus snoop enabled (%d)",
                                 self.mbus_snoop_enabled)
-                        self.respond(chr(self.mbus_snoop_enabled))
+                        self.respond(struct.pack("B", self.mbus_snoop_enabled))
                     elif msg[0] == 'b':
                         logger.info("Responded to query for MBus broadcast mask (%02x ones %02x zeros)",
                                 self.mbus_broadcast_mask_ones, self.mbus_broadcast_mask_zeros)
-                        self.respond(chr(self.mbus_broadcast_mask_ones) + chr(self.mbus_broadcast_mask_zeros))
+                        self.respond(struct.pack("BB",
+                            self.mbus_broadcast_mask_ones,
+                            self.mbus_broadcast_mask_zeros))
                     elif msg[0] == 'B':
                         logger.info("Responded to query for MBus snoop broadcast mask (%02x ones %02x zeros)",
                                 self.mbus_snoop_broadcast_mask_ones, self.mbus_snoop_broadcast_mask_zeros)
-                        self.respond(chr(self.mbus_snoop_broadcast_mask_ones) + chr(self.mbus_snoop_broadcast_mask_zeros))
+                        self.respond(struct.pack("BB",
+                            self.mbus_snoop_broadcast_mask_ones,
+                            self.mbus_snoop_broadcast_mask_zeros))
                     elif msg[0] == 'm':
                         logger.info("Responded to query for MBus master state (%s)",
                                 ("off", "on")[self.mbus_ismaster])
-                        self.respond(chr(self.mbus_ismaster))
+                        self.respond(struct.pack("B", self.mbus_ismaster))
                     elif msg[0] == 'c':
                         raise NotImplementedError("MBus clock not defined")
                     elif msg[0] == 'i':
                         logger.info("Responded to query for MBus should interrupt (%d)",
                                 self.mbus_should_interrupt)
-                        self.respond(chr(self.mbus_should_interrupt))
+                        self.respond(struct.pack("B", self.mbus_should_interrupt))
                     elif msg[0] == 'p':
                         logger.info("Responded to query for MBus should use priority arb (%d)",
                                 self.mbus_should_prio)
-                        self.respond(chr(self.mbus_should_prio))
+                        self.respond(struct.pack("B", self.mbus_should_prio))
                     elif msg[0] == 'r':
                         logger.info("Responded to query for MBus internal reset (%d)",
                                 self.mbus_force_reset)
-                        self.respond(chr(self.mbus_force_reset))
+                        self.respond(struct.pack("B", self.mbus_force_reset))
                     else:
                         logger.error("bad 'M' subtype: " + msg[0])
                 elif msg_type == 'm':
@@ -578,15 +587,14 @@ class Simulator(object):
                         div = int(CLOCK_FREQ / self.flow_clock_in_hz)
                         resp = ''
                         if minor >= 3:
-                            resp += chr((div >> 24) & 0xff)
-                        resp += chr((div >> 16) & 0xff)
-                        resp += chr((div >> 8) & 0xff)
-                        resp += chr(div & 0xff)
+                            resp = struct.pack(">I", div)
+                        else:
+                            resp = struct.pack(">I", div)[1:]
                         self.respond(resp)
                     elif msg[0] == 'o':
                         if minor > 1:
                             logger.info("Responded to query for FLOW power (%s)", ('off','on')[self.flow_onoff])
-                            self.respond(chr(self.flow_onoff))
+                            self.respond(struct.pack("B", self.flow_onoff))
                         else:
                             logger.error("Request for protocol 0.2 command (Oo), but the")
                             logger.error("negotiated protocol was 0.1")
@@ -613,7 +621,9 @@ class Simulator(object):
                         logger.info("Set GOC/EIN toggle to %s mode", ('EIN','GOC')[ein_goc_toggle])
                         self.ack()
                     else:
+                        assert False
                         logger.error("bad 'o' subtype: " + msg[0])
+                        assert False
                 elif msg_type == 'P':
                     pwr_idx = ord(msg[1])
                     if pwr_idx not in (0,1,2):
@@ -623,28 +633,28 @@ class Simulator(object):
                         if pwr_idx is 0:
                             logger.info("Query 0.6V rail (vset=%d, vout=%.2f)", self.vset_0p6,
                                     (0.537 + 0.0185 * self.vset_0p6) * DEFAULT_POWER_0P6)
-                            self.respond(chr(pwr_idx) + chr(self.vset_0p6))
+                            self.respond(struct.pack("BB", pwr_idx, self.vset_0p6))
                         elif pwr_idx is 1:
                             logger.info("Query 1.2V rail (vset=%d, vout=%.2f)", self.vset_1p2,
                                     (0.537 + 0.0185 * self.vset_1p2) * DEFAULT_POWER_1P2)
-                            self.respond(chr(pwr_idx) + chr(self.vset_1p2))
+                            self.respond(struct.pack("BB", pwr_idx, self.vset_1p2))
                         elif pwr_idx is 2:
                             logger.info("Query VBatt rail (vset=%d, vout=%.2f)", self.vset_vbatt,
                                     (0.537 + 0.0185 * self.vset_vbatt) * DEFAULT_POWER_VBATT)
-                            self.respond(chr(pwr_idx) + chr(self.vset_vbatt))
+                            self.respond(struct.pack("BB", pwr_idx, self.vset_vbatt))
                     elif msg[0] == 'o':
                         if pwr_idx is 0:
                             logger.info("Query 0.6V rail (%s)", ('off','on')[self.power_0p6_on])
-                            self.respond(chr(self.power_0p6_on))
+                            self.respond(struct.pack("B", self.power_0p6_on))
                         elif pwr_idx is 1:
                             logger.info("Query 1.2V rail (%s)", ('off','on')[self.power_1p2_on])
-                            self.respond(chr(self.power_1p2_on))
+                            self.respond(struct.pack("B", self.power_1p2_on))
                         elif pwr_idx is 2:
                             logger.info("Query vbatt rail (%s)", ('off','on')[self.power_vbatt_on])
-                            self.respond(chr(self.power_vbatt_on))
+                            self.respond(struct.pack("B", self.power_vbatt_on))
                         elif pwr_idx is 3:
                             logger.info("Query goc rail (%s)", ('off','on')[self.power_goc_on])
-                            self.respond(chr(self.power_goc_on))
+                            self.respond(struct.pack("B", self.power_goc_on))
                     else:
                         logger.error("bad 'p' subtype: " + msg[0])
                         raise Exception
@@ -705,13 +715,17 @@ class Simulator(object):
     def respond(self, msg, ack=True):
         with self.s_lock:
             if (ack):
-                self.s.write(chr(0))
+                self.s.write(bytes((0,)))
             else:
-                self.s.write(chr(1))
-            self.s.write(chr(self.event))
+                self.s.write(bytes((1,)))
+            self.s.write(bytes((self.event,)))
             self.event += 1
             self.event %= 256
-            self.s.write(chr(len(msg)))
+            self.s.write(bytes((len(msg),)))
+
+            if type(msg) != bytes:
+                msg = bytes(msg, 'utf-8')
+
             if len(msg):
                 self.s.write(msg)
         logger.debug("Sent a response of length: " + str(len(msg)))
