@@ -365,7 +365,7 @@ class ICE(object):
 
     def masks_to_strings(self, ones, zeros, length):
         s = ''
-        for l in xrange(length):
+        for l in range(length):
             o = bool(ones & (1 << l))
             z = bool(zeros & (1 << l))
             if o and z:

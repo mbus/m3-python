@@ -127,7 +127,7 @@ class Simulator(object):
 
 
         self.event = 0
-        self.gpios = [Gpio() for x in xrange(MAX_GPIO)]
+        self.gpios = [Gpio() for x in range(MAX_GPIO)]
 
         if self.args.generate_messages:
             self.gen_thread = threading.Thread(target=self.spurious_message_thread)
@@ -403,19 +403,19 @@ class Simulator(object):
                     else:
                         if msg[0] == 'l':
                             mask = 0
-                            for i in xrange(len(self.gpios)):
+                            for i in range(len(self.gpios)):
                                 mask |= (self.gpios[i].level << i)
                             logger.info("Responded to request for GPIO level mask (%06x)", mask)
                             self.respond(struct.pack('>I', mask)[1:])
                         elif msg[0] == 'd':
                             mask = 0
-                            for i in xrange(len(self.gpios)):
+                            for i in range(len(self.gpios)):
                                 mask |= (self.gpios[i].direction << i)
                             logger.info("Responded to request for GPIO direction mask (%06x)", mask)
                             self.respond(struct.pack('>I', mask)[1:])
                         elif msg[0] == 'i':
                             mask = 0
-                            for i in xrange(len(self.gpios)):
+                            for i in range(len(self.gpios)):
                                 mask |= (self.gpios[i].interrupt << i)
                             logger.info("Responded to request for GPIO interrupt mask (%06x)", mask)
                             self.respond(struct.pack('>I', mask)[1:])
@@ -440,21 +440,21 @@ class Simulator(object):
                         if msg[0] == 'l':
                             high,mid,low = map(ord, msg[1:])
                             mask = low | mid << 8 | high << 16
-                            for i in xrange(24):
+                            for i in range(24):
                                 self.gpios[i].level = (mask >> i) & 0x1
                             logger.info("Set GPIO level mask to: %06x", mask)
                             self.ack()
                         elif msg[0] == 'd':
                             high,mid,low = map(ord, msg[1:])
                             mask = low | mid << 8 | high << 16
-                            for i in xrange(24):
+                            for i in range(24):
                                 self.gpios[i].direction = (mask >> i) & 0x1
                             logger.info("Set GPIO direction mask to: %06x", mask)
                             self.ack()
                         elif msg[0] == 'i':
                             high,mid,low = map(ord, msg[1:])
                             mask = low | mid << 8 | high << 16
-                            for i in xrange(24):
+                            for i in range(24):
                                 self.gpios[i].interrupt = (mask >> i) & 0x1
                             logger.info("Set GPIO interrupt mask to: %06x", mask)
                             self.ack()
