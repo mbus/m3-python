@@ -24,7 +24,7 @@ logger.debug('Got ice.py logger')
 
 try:
     import threading
-    import Queue
+    import queue as Queue
 except ImportError:
     logger.warn("Your python installation does not support threads.")
     logger.warn("")

@@ -15,7 +15,7 @@ import inspect
 import os
 import sys
 import socket
-import Queue
+import queue as Queue
 import time
 import threading
 
