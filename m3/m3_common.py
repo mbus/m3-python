@@ -833,6 +833,7 @@ class mbus_snooper(object):
         parser.add_argument('-c', '--callback',
                 help="Custom Python function to run. Argument must be a valid Python file with a top-level function of the form 'def callback(_time, address, data, cb0, cb1):'. The flag may be supplied multiple times to provide multiple callback functions.",
                 action='append',
+                default=[],
                 )
 
     def _callback(self, *args, **kwargs):
