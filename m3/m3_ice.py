@@ -35,14 +35,17 @@ class m3_ice(m3_common):
         #        aliases=['reset'],
         #        help='Cycle 0.6V rail to reset M3 chips')
         self.parser_softreset = self.subparsers.add_parser('reset',
+                parents=[self.parent_parser],
                 help='Cycle 0.6V rail to reset M3 chips')
         self.parser_softreset.set_defaults(func=self.cmd_softreset)
 
         self.parser_hardreset = self.subparsers.add_parser('hardreset',
+                parents=[self.parent_parser],
                 help='Cycle all power rails to cold-boot M3 chips')
         self.parser_hardreset.set_defaults(func=self.cmd_hardreset)
 
         self.parser_power = self.subparsers.add_parser('power',
+                parents=[self.parent_parser],
                 help='Control power rails sent to connected M3 chips')
         self.parser_power.add_argument('STATE',
                 choices=['on', 'off'],
@@ -50,16 +53,19 @@ class m3_ice(m3_common):
         self.parser_power.set_defaults(func=self.cmd_power)
 
         self.parser_snoop = self.subparsers.add_parser('snoop',
+                parents=[self.parent_parser],
                 help='Passively monitor MBus messages')
         mbus_snooper.add_parse_args(self.parser_snoop)
         self.parser_snoop.set_defaults(func=self.cmd_snoop)
 
         self.parser_ein = self.subparsers.add_parser('ein',
+                parents=[self.parent_parser],
                 help='Command the chip via the EIN protocol')
         ein_programmer.add_parse_args(self.parser_ein)
         self.parser_ein.set_defaults(func=self.cmd_ein)
 
         self.parser_goc = self.subparsers.add_parser('goc',
+                parents=[self.parent_parser],
                 help='Send commands via the GOC protocol (blinking light)')
         self.goc_programmer = goc_programmer(self, self.parser_goc)
         self.parser_goc.set_defaults(func=self.cmd_goc)

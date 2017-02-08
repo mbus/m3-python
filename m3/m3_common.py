@@ -320,6 +320,7 @@ class m3_common(object):
 
     def __init__(self):
         self.wait_event = threading.Event()
+        self._create_parent_parser()
 
         try:
             self.print_banner()
@@ -363,30 +364,36 @@ class m3_common(object):
         logger.info(" -- " + self.TITLE)
         logger.info("")
 
-    def add_parse_args(self):
-        self.parser.add_argument('-s', "--serial",
-                default=None,
+    def _create_parent_parser(self):
+        # This parser object supplies common options to all subparsers
+        self.parent_parser = argparse.ArgumentParser(add_help=False)
+
+        self.parent_parser.add_argument('-s', "--serial",
+                default='autodetect',
                 help="Path to ICE serial device")
 
-        self.parser.add_argument('-w', '--wait-for-messages',
+        self.parent_parser.add_argument('-w', '--wait-for-messages',
                 action='store_true',
                 help="Wait for messages (hang) when done.")
 
-        self.parser.add_argument('-y', '--yes',
+        self.parent_parser.add_argument('-y', '--yes',
                 action='store_true',
                 help="Use default values for all prompts.")
 
+    def add_parse_args(self):
+        pass
 
     def parse_args(self):
         self.parser = argparse.ArgumentParser(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                 description=self.DESCRIPTION,
                 epilog=self.EPILOG,
+                parents=[self.parent_parser],
                 )
         self.add_parse_args()
 
         self.args = self.parser.parse_args()
-        if self.args.serial is None:
+        if self.args.serial == 'autodetect':
             self.serial_path = self.guess_serial()
         else:
             self.serial_path = self.args.serial
