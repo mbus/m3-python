@@ -191,6 +191,9 @@ class ICE(object):
 
         self.goc_ein_toggle = -1
 
+        # Set initial, minimal capability set
+        self.capabilities = 'VvXx'
+
     def connect(self, serial_device, baudrate=115200):
         '''
         Opens a connection to the ICE board.
@@ -235,6 +238,19 @@ class ICE(object):
             #t.daemon = True
             #t.start()
         except KeyError:
+            if msg_type not in self.capabilities:
+                logger.warn("Synchronization lost. Likely causes:")
+                logger.warn("  - you are reconnecting to an ICE that was previously snooping")
+                logger.warn("  - your computer can't keep up with the rate of messages ICE sends")
+                logger.warn("  - some transient serial error occurred (not impossible at 3 MBaud)")
+                logger.warn("This library will try to get back on track, but if")
+                logger.warn("this message keeps printing, you'll need to hit the")
+                logger.warn("reset button on the ICE board")
+                # The idea here is to read as much as available in the serial
+                # buffer, throwing it away, and count on the gaps between ICE
+                # messages to get things back on track. A bit ugly, but I'm not
+                # sure I know of a better solution :/
+                self.dev.read()
             try:
                 logger.warn("WARNING: No handler registered for message type: " +
                         str(msg_type))
@@ -572,9 +588,11 @@ class ICE(object):
 
         if self.minor >= 2:
             logger.debug("ICE version supports capabilities, querying")
+            self.capabilities = 'VvXx?'
             self.ice_query_capabilities()
             logger.debug("Capabilities: " + self.capabilities)
         else:
+            self.capabilities = 'VvXxdIifOoGgPp'
             logger.debug("Version 0.1 does not have capability support, skipping")
 
     def min_version(self, required_version):
