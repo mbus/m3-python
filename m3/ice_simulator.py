@@ -154,6 +154,8 @@ class Simulator(object):
 
     def spurious_message_thread(self):
         def send_snoop(addr, data, control):
+            logger.info("Send generated message ADDR: 0x{}   DATA: 0x{}   CTL: 0x{}".\
+                    format(addr, data, control))
             with self.s_lock:
                 self.s.write(bytes('B', 'utf-8'))
                 self.s.write(bytes((self.event,)))
@@ -171,13 +173,19 @@ class Simulator(object):
                 self.s.write(control)
 
         while True:
+            # control:
+            #   b0 b1 -> val -> meaning
+            #  - 0, 0     0     General Error
+            #  - 0, 1     2     TX or RX Error
+            #  - 1, 0     1     ACK
+            #  - 1, 1     3     NAK
             for args in (
-                    ('00000074', 'deadbeef', '02'),
-                    ('00000040', 'ab', '02'),
-                    ('f0012345', '0123456789abcdef', '00'),
-                    ('00000022', 'a5'*160, '02'),
-                    ('00000033', 'c9'*160, '02'),
-                    ('00000044', 'ef'*160, '02'),
+                    ('00000074', 'deadbeef', '01'),
+                    ('00000040', 'ab', '01'),
+                    ('f0012345', '0123456789abcdef', '03'),
+                    ('00000022', 'a5'*160, '01'),
+                    ('00000033', 'c9'*160, '01'),
+                    ('00000044', 'ef'*160, '01'),
                     ):
                 self.sleep(random.randint(1,12))
                 if not self.mbus_snoop_enabled:
