@@ -9,6 +9,7 @@ from builtins import (
 
 import argparse
 import atexit
+import binascii
 import csv
 import inspect
 import os
@@ -847,7 +848,10 @@ class mbus_snooper(object):
                 callback(time, *args, **kwargs)
 
     def callback_print(self, _time, address, data, cb0, cb1):
-        print("@ Time: " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(_time)) + "  ADDR: 0x" + address.encode('hex') + "  DATA: 0x" + data.encode('hex') + "  (ACK: " + str(not cb1) + ")")
+        print("@ Time: " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(_time))
+                + "  ADDR: 0x" + binascii.hexlify(address)
+                + "  DATA: 0x" + binascii.hexlify(data)
+                + "  (ACK: " + str(not cb1) + ")")
 
     def callback_csv(self, _time, address, data, cb0, cb1):
         self._csv_writer.writerow((_time, address.encode('hex'), data.encode('hex'), cb0, cb1))

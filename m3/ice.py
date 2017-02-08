@@ -176,13 +176,13 @@ class ICE(object):
 
         self.msg_handler = {}
         self.d_lock = threading.Lock()
-        self.d_frag = ''
+        self.d_frag = bytes()
         self.msg_handler['d'] = self.d_defragger
         self.b_lock = threading.Lock()
-        self.b_frag = ''
+        self.b_frag = bytes()
         self.msg_handler['b'] = self.b_defragger
         self.B_lock = threading.Lock()
-        self.B_frag = ''
+        self.B_frag = bytes()
         self.msg_handler['B'] = self.B_defragger
         self.B_formatter_success_only = False
         self.B_formatter_control_bits = False
@@ -383,7 +383,7 @@ class ICE(object):
                 logger.debug("Got a complete I2C transaction of length %d bytes. Forwarding..." % (len(self.d_frag)))
                 sys.stdout.flush()
                 self.spawn_handler('d+', event_id, len(self.d_frag), copy(self.d_frag))
-                self.d_frag = ''
+                self.d_frag = bytes()
             else:
                 logger.debug("Got an I2C fragment... thus far %d bytes received:" % (len(self.d_frag)))
 
@@ -408,7 +408,7 @@ class ICE(object):
             if length != 255:
                 logger.debug("Got a complete MBus message of length %d bytes. Forwarding..." % (len(self.b_frag)))
                 self.spawn_handler('b+', event_id, len(self.b_frag), copy(self.b_frag))
-                self.b_frag = ''
+                self.b_frag = bytes()
             else:
                 logger.debug("Got a MBus fragment... thus far %d bytes received:" % (len(self.b_frag)))
 
@@ -433,7 +433,7 @@ class ICE(object):
                 logger.debug("Got a complete snooped MBus message. Length %d bytes. Forwarding..." % (len(self.B_frag)))
                 sys.stdout.flush()
                 self.spawn_handler('B+', event_id, len(self.B_frag), copy(self.B_frag))
-                self.B_frag = ''
+                self.B_frag = bytes()
             else:
                 logger.debug("Got a snoop MBus fragment... thus far %d bytes received:" % (len(self.B_frag)))
 
