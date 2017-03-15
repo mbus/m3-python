@@ -23,6 +23,7 @@ import threading
 import imp
 
 from . import m3_logging
+from . import __version__
 logger = m3_logging.get_logger(__name__)
 logger.debug('Got m3_common.py logger')
 
@@ -52,7 +53,7 @@ def printing_sleep(seconds):
 class m3_common(object):
     TITLE = "Generic M3 Programmer"
     DESCRIPTION = None
-    EPILOG = None
+    EPILOG = "m3_ice version {}".format(__version__)
 
     def default_value(self, prompt, default, extra=None, invert=False):
         if invert and (extra is None):
