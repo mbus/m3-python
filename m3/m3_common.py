@@ -454,12 +454,15 @@ class m3_common(object):
     @staticmethod
     def read_binfile_static(binfile):
         def guess_type_is_hex(binfile):
-            for line in open(binfile):
-                for c in line.strip():
-                    c = ord(c)
-                    if c < 0x20 or c > 0x7a:
-                        return False
-            return True
+            try:
+                for line in open(binfile):
+                    for c in line.strip():
+                        c = ord(c)
+                        if c < 0x20 or c > 0x7a:
+                            return False
+                return True
+            except UnicodeDecodeError:
+                return False
 
         if guess_type_is_hex(binfile):
             binfd = open(binfile, 'r')
@@ -531,7 +534,7 @@ class m3_common(object):
 class goc_programmer(object):
     TITLE = "GOC Programmer"
     #SLOW_FREQ_IN_HZ = 0.625
-    SLOW_FREQ_IN_HZ = 70
+    SLOW_FREQ_IN_HZ =15 
 
     def __init__(self, m3_ice, parser):
         self.m3_ice = m3_ice
@@ -545,8 +548,8 @@ class goc_programmer(object):
                         default=goc_programmer.SLOW_FREQ_IN_HZ, type=float)
 
         parser.add_argument('-V', '--goc-version',
-                help="GOC protocol version. Defaults to 2",
-                default=2,
+                help="GOC protocol version. Defaults to 3",
+                default=3,
                 type=int,
                 )
 
