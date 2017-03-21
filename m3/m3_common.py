@@ -381,8 +381,18 @@ class m3_common(object):
                 action='store_true',
                 help="Use default values for all prompts.")
 
+        # does not work if added here, so added later
+        #self.parent_parser.add_argument('-dbg', '--debug', 
+        #        default=False,
+        #        help='Enable debugging messages.')
+
+
+
     def add_parse_args(self):
-        pass
+        self.parser.add_argument('-dbg', '--debug', 
+                action='store_true',
+                help='Enable debugging messages.')
+
 
     def parse_args(self):
         self.parser = argparse.ArgumentParser(
@@ -398,6 +408,10 @@ class m3_common(object):
             self.serial_path = self.guess_serial()
         else:
             self.serial_path = self.args.serial
+
+        if (self.args.debug): 
+            logger.info ('Setting logging to DEBUG ')
+            m3_logging.LoggerSetLevel('Debug')
 
         # XXX This is a bit of a hack
         if 'goc_version' in self.args:

@@ -111,4 +111,9 @@ def log_level_from_environment():
 	except KeyError:
 		return logging.INFO
 
+def LoggerSetLevel(lvl):
+    if lvl in ['DEBUG', 'Debug', 'debug']:
+       logger.setLevel = logging.DEBUG
+    else: raise Exception('unsupported level')
+
 logger = get_logger(__name__)
