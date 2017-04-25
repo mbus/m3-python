@@ -23,8 +23,9 @@ import threading
 import imp
 
 from . import m3_logging
-logger = m3_logging.get_logger(__name__)
-logger.debug('Got m3_common.py logger')
+logger = m3_logging.getGlobalLogger()
+#logger = m3_logging.get_logger(__name__)
+#logger.debug('Got m3_common.py logger')
 
 from .ice import ICE
 from .ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
@@ -412,14 +413,25 @@ class m3_common(object):
         self.args = self.parser.parse_args()
         
         #this needs to come before calls to logger.*
+        #try to find debug flag
         if (self.args.debug): 
-            logger.info ('Setting logging to DEBUG ')
             m3_logging.LoggerSetLevel('Debug')
+            logger.debug('Found debug flag, setting logging=DEBUG ')
+        else:
+            # or try to find ICE_DEBUG in env
+            try:
+                os.environ['ICE_DEBUG']
+                m3_logging.LoggerSetLevel('Debug')
+                logger.debug('found ICE_DEBUG in env, ' + 
+                                'setting logging=DEBUG ')
+            #otherwise default to logging level info                
+            except KeyError:
+                m3_logging.LoggerSetLevel('Info')
 
         if self.args.serial == 'autodetect':
             self.serial_path = self.guess_serial()
         else:
-            logger.debug('Setting serial='+self.args.serial)
+            logger.debug('Found serial='+self.args.serial)
             self.serial_path = self.args.serial
 
 

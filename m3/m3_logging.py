@@ -89,7 +89,7 @@ def get_logger(name):
 		l.addHandler(get_logger.handler)
 	except AttributeError:
 		h = logging.StreamHandler()
-		h.level = log_level_from_environment()
+		h.level = logging.DEBUG #log_level_from_environment()
 		h.addFilter(NoTraceFilter())
 		get_logger.handler = h
 		l.addHandler(get_logger.handler)
@@ -104,16 +104,21 @@ def get_logger(name):
 
 	return l
 
-def log_level_from_environment():
-	try:
-		os.environ['ICE_DEBUG']
-		return logging.DEBUG
-	except KeyError:
-		return logging.INFO
+#def log_level_from_environment():
+#	try:
+#		os.environ['ICE_DEBUG']
+#		return logging.DEBUG
+#	except KeyError:
+#		return logging.INFO
 
 def LoggerSetLevel(lvl):
     if lvl in ['DEBUG', 'Debug', 'debug']:
-       logger.setLevel = logging.DEBUG
+       logger.setLevel(logging.DEBUG)
+    elif lvl in ['INFO', 'Info', 'info']:
+       logger.setLevel(logging.INFO)
     else: raise Exception('unsupported level')
 
 logger = get_logger(__name__)
+
+def getGlobalLogger():
+    return logger
