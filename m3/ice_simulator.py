@@ -258,25 +258,25 @@ class Simulator(object):
 
                 if msg_type == 'V':
                     if self.args.ice_version == 1:
-                        self.respond('0001'.decode('hex'))
+                        self.respond(binascii.unhexlify('0001'))
                     elif self.args.ice_version == 2:
-                        self.respond('0001'.decode('hex'))
+                        self.respond(binascii.unhexlify('0001'))
                     elif self.args.ice_version == 3:
-                        self.respond('000300020001'.decode('hex'))
+                        self.respond(binascii.unhexlify('000300020001'))
                     else:
                         raise ValueError("Unknown ice version: %d" % (self.args.ice_version))
                 elif msg_type == 'v':
-                    if msg == '0003'.decode('hex'):
+                    if msg == binascii.unhexlify('0003'):
                         CLOCK_FREQ = 4e6
                         minor = 3
                         self.ack()
                         logger.info("Negotiated to protocol version 0.3")
-                    elif msg == '0002'.decode('hex'):
+                    elif msg == binascii.unhexlify('0002'):
                         CLOCK_FREQ = 4e6
                         minor = 2
                         self.ack()
                         logger.info("Negotiated to protocol version 0.2")
-                    elif msg == '0001'.decode('hex'):
+                    elif msg == binascii.unhexlify('0001'):
                         CLOCK_FREQ = 2e6
                         minor = 1
                         self.ack()
