@@ -369,9 +369,10 @@ class m3_common(object):
         # This parser object supplies common options to all subparsers
         self.parent_parser = argparse.ArgumentParser(add_help=False)
 
-        self.parent_parser.add_argument('-s', "--serial",
-                default='autodetect',
-                help="Path to ICE serial device")
+        # does not work if added here, so added later
+        #self.parent_parser.add_argument('-s', "--serial",
+        #        default='autodetect',
+        #        help="Path to ICE serial device")
 
         self.parent_parser.add_argument('-w', '--wait-for-messages',
                 action='store_true',
@@ -389,6 +390,11 @@ class m3_common(object):
 
 
     def add_parse_args(self):
+
+        self.parser.add_argument('-s', "--serial",
+                default='autodetect',
+                help="Path to ICE serial device")
+
         self.parser.add_argument('-dbg', '--debug', 
                 action='store_true',
                 help='Enable debugging messages.')
@@ -404,14 +410,18 @@ class m3_common(object):
         self.add_parse_args()
 
         self.args = self.parser.parse_args()
-        if self.args.serial == 'autodetect':
-            self.serial_path = self.guess_serial()
-        else:
-            self.serial_path = self.args.serial
-
+        
+        #this needs to come before calls to logger.*
         if (self.args.debug): 
             logger.info ('Setting logging to DEBUG ')
             m3_logging.LoggerSetLevel('Debug')
+
+        if self.args.serial == 'autodetect':
+            self.serial_path = self.guess_serial()
+        else:
+            logger.debug('Setting serial='+self.args.serial)
+            self.serial_path = self.args.serial
+
 
         # XXX This is a bit of a hack
         if 'goc_version' in self.args:
