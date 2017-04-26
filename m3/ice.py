@@ -19,8 +19,9 @@ import sys
 import time
 
 from . import m3_logging
-logger = m3_logging.get_logger(__name__)
-logger.debug('Got ice.py logger')
+#logger = m3_logging.get_logger(__name__)
+#logger.debug('Got ice.py logger')
+logger = m3_logging.getGlobalLogger()
 
 try:
     import threading

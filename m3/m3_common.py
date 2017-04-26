@@ -23,9 +23,9 @@ import threading
 import imp
 
 from . import m3_logging
-from . import __version__
-logger = m3_logging.get_logger(__name__)
-logger.debug('Got m3_common.py logger')
+logger = m3_logging.getGlobalLogger()
+#logger = m3_logging.get_logger(__name__)
+#logger.debug('Got m3_common.py logger')
 
 from .ice import ICE
 from .ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
@@ -370,9 +370,10 @@ class m3_common(object):
         # This parser object supplies common options to all subparsers
         self.parent_parser = argparse.ArgumentParser(add_help=False)
 
-        self.parent_parser.add_argument('-s', "--serial",
-                default='autodetect',
-                help="Path to ICE serial device")
+        # does not work if added here, so added later
+        #self.parent_parser.add_argument('-s', "--serial",
+        #        default='autodetect',
+        #        help="Path to ICE serial device")
 
         self.parent_parser.add_argument('-w', '--wait-for-messages',
                 action='store_true',
@@ -382,8 +383,23 @@ class m3_common(object):
                 action='store_true',
                 help="Use default values for all prompts.")
 
+        # does not work if added here, so added later
+        #self.parent_parser.add_argument('-dbg', '--debug', 
+        #        default=False,
+        #        help='Enable debugging messages.')
+
+
+
     def add_parse_args(self):
-        pass
+
+        self.parser.add_argument('-s', "--serial",
+                default='autodetect',
+                help="Path to ICE serial device")
+
+        self.parser.add_argument('-dbg', '--debug', 
+                action='store_true',
+                help='Enable debugging messages.')
+
 
     def parse_args(self):
         self.parser = argparse.ArgumentParser(
@@ -395,10 +411,29 @@ class m3_common(object):
         self.add_parse_args()
 
         self.args = self.parser.parse_args()
+        
+        #this needs to come before calls to logger.*
+        #try to find debug flag
+        if (self.args.debug): 
+            m3_logging.LoggerSetLevel('Debug')
+            logger.debug('Found debug flag, setting logging=DEBUG ')
+        else:
+            # or try to find ICE_DEBUG in env
+            try:
+                os.environ['ICE_DEBUG']
+                m3_logging.LoggerSetLevel('Debug')
+                logger.debug('found ICE_DEBUG in env, ' + 
+                                'setting logging=DEBUG ')
+            #otherwise default to logging level info                
+            except KeyError:
+                m3_logging.LoggerSetLevel('Info')
+
         if self.args.serial == 'autodetect':
             self.serial_path = self.guess_serial()
         else:
+            logger.debug('Found serial='+self.args.serial)
             self.serial_path = self.args.serial
+
 
         # XXX This is a bit of a hack
         if 'goc_version' in self.args:
