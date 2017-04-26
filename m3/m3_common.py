@@ -24,8 +24,6 @@ import imp
 
 from . import m3_logging
 logger = m3_logging.getGlobalLogger()
-#logger = m3_logging.get_logger(__name__)
-#logger.debug('Got m3_common.py logger')
 
 from .ice import ICE
 from .ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
@@ -370,11 +368,6 @@ class m3_common(object):
         # This parser object supplies common options to all subparsers
         self.parent_parser = argparse.ArgumentParser(add_help=False)
 
-        # does not work if added here, so added later
-        #self.parent_parser.add_argument('-s', "--serial",
-        #        default='autodetect',
-        #        help="Path to ICE serial device")
-
         self.parent_parser.add_argument('-w', '--wait-for-messages',
                 action='store_true',
                 help="Wait for messages (hang) when done.")
@@ -383,15 +376,9 @@ class m3_common(object):
                 action='store_true',
                 help="Use default values for all prompts.")
 
-        # does not work if added here, so added later
-        #self.parent_parser.add_argument('-dbg', '--debug', 
-        #        default=False,
-        #        help='Enable debugging messages.')
-
 
 
     def add_parse_args(self):
-
         self.parser.add_argument('-s', "--serial",
                 default='autodetect',
                 help="Path to ICE serial device")
@@ -411,7 +398,7 @@ class m3_common(object):
         self.add_parse_args()
 
         self.args = self.parser.parse_args()
-        
+
         #this needs to come before calls to logger.*
         #try to find debug flag
         if (self.args.debug): 

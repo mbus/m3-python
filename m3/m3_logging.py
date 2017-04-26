@@ -89,7 +89,7 @@ def get_logger(name):
 		l.addHandler(get_logger.handler)
 	except AttributeError:
 		h = logging.StreamHandler()
-		h.level = logging.DEBUG #log_level_from_environment()
+		h.level = logging.DEBUG
 		h.addFilter(NoTraceFilter())
 		get_logger.handler = h
 		l.addHandler(get_logger.handler)
