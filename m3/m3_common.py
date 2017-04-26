@@ -22,6 +22,8 @@ import threading
 # if Py2K:
 import imp
 
+from . import __version__ 
+
 from . import m3_logging
 logger = m3_logging.getGlobalLogger()
 
@@ -368,20 +370,21 @@ class m3_common(object):
         # This parser object supplies common options to all subparsers
         self.parent_parser = argparse.ArgumentParser(add_help=False)
 
-        self.parent_parser.add_argument('-w', '--wait-for-messages',
-                action='store_true',
-                help="Wait for messages (hang) when done.")
-
-        self.parent_parser.add_argument('-y', '--yes',
-                action='store_true',
-                help="Use default values for all prompts.")
-
+        
 
 
     def add_parse_args(self):
         self.parser.add_argument('-s', "--serial",
                 default='autodetect',
                 help="Path to ICE serial device")
+
+        self.parser.add_argument('-w', '--wait-for-messages',
+                action='store_true',
+                help="Wait for messages (hang) when done.")
+
+        self.parser.add_argument('-y', '--yes',
+                action='store_true',
+                help="Use default values for all prompts.")
 
         self.parser.add_argument('-dbg', '--debug', 
                 action='store_true',
