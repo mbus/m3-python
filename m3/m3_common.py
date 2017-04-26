@@ -22,6 +22,8 @@ import threading
 # if Py2K:
 import imp
 
+from . import __version__ 
+
 from . import m3_logging
 logger = m3_logging.getGlobalLogger()
 
