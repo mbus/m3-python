@@ -46,7 +46,7 @@ except ImportError:
 ################################################################################
 
 class ICE(object):
-    VERSIONS = ((0,1),(0,2),(0,3))
+    VERSIONS = ((0,1),(0,2),(0,3),(0,4))
     ONEYEAR = 365 * 24 * 60 * 60
 
     class ICE_Error(Exception):
