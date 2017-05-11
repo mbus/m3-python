@@ -139,6 +139,13 @@ class Simulator(object):
             self.replay_thread.daemon = True
             self.replay_thread.start()
 
+        # Skip multithreading, just call transaction_thread in run()
+        #if self.args.transaction is not None:
+        #    self.transaction_thread = threading.Thread(target=self.transaction_thread)
+        #    self.transaction_thread.daemon = True
+        #    self.transaction_thread.start()
+            
+
 
     def run(self, background=False):
         if background:
@@ -149,7 +156,12 @@ class Simulator(object):
             logger.info("-" * 80)
             logger.info("-- M3 ICE Interface Board Simulator")
             logger.info("")
-            self.main_loop()
+
+            if self.args.transaction:
+                #skip multithreading here
+                self.transaction_thread()
+            else:
+                self.main_loop()
 
 
     def spurious_message_thread(self):
@@ -234,6 +246,73 @@ class Simulator(object):
             send_snoop(addr, data, '02')
 
         logger.info("Replay finished.")
+
+    #
+    #
+    #
+    def transaction_thread(self):
+        ''' 
+        Replays a series of ICE transactions with timing information
+        '''
+        def read_raw_message():
+                msg_type, event_id, length = self.s.read(3)
+                length_int = ord(length)
+                logger.debug("Got a message of type: " + msg_type + 
+                        ' length: ' + str(length_int))
+                msg = self.s.read(length_int)
+
+                return msg_type + event_id + length + msg
+
+        logger.info("Transaction beginning")
+        last_ts = None
+
+        for line in open(self.args.transaction):
+            
+            line = line.strip('\n')
+            line = line.strip('\r')
+
+            logger.info('Working on: ' + line)
+
+            if len(line) == 0: continue
+            elif line[0] in ['#', ' ', '/', ]: continue
+
+            elif line.startswith('WAIT'):
+               
+                #find the number after T
+                hex_tex = line.replace(' ','').split('T')[1].strip()
+                hex_tex = hex_tex.replace('0x', '').lower()
+                data = binascii.unhexlify(hex_tex)
+               
+                rxMsg = b''
+                while (rxMsg != data):
+                    rxMsg = read_raw_message()
+                    logger.debug('Read: ' + binascii.hexlify(rxMsg))
+                    logger.info('vs  : ' + binascii.hexlify(data))
+                logger.debug('Found match!') 
+
+            elif line.startswith('SEND'):
+                # find the number after N (D could also be hex...)
+                hex_tex = line.replace(' ','').split('N')[1][1:].strip()
+                hex_tex = hex_tex.replace('0x', '').lower()
+                data = binascii.unhexlify(hex_tex)
+                print ('SENDING: ' + binascii.hexlify(data))
+                self.s.write(data)
+                self.s.flush()
+
+            elif line.startswith('SLEEP'): 
+                time_str = line.replace(' ','').split('P')[1]
+                time_sec = float(time_str)
+                time.sleep(time_sec)
+                self.s.flush()
+
+
+
+            else: raise Exception('Unknown Command: "' + repr(line) + '"')
+
+        time.sleep(1)
+        self.s.close()
+
+        logger.info("Transaction finished.")
 
 
     def main_loop(self):
@@ -756,6 +835,8 @@ class Simulator(object):
         parser.add_argument("-a", "--ack-all", action="store_true", help="Only supports i2c at the moment")
         parser.add_argument("-g", "--generate-messages", action="store_true", help="Generate periodic, random MBus messages")
         parser.add_argument("-r", "--replay", default=None, help="Replay a ICE snoop trace")
+        parser.add_argument('-t', '--transaction', default=None, 
+            help='Replay a series of ICE transaction with timing')
 
         return parser
 
