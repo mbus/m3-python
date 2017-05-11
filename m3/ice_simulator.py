@@ -103,6 +103,7 @@ class Simulator(object):
         self.s_lock = threading.Lock()
         self.s_en_event = threading.Event()
 
+        logger.debug('Serial:' + str(self.args.serial))
         if self.args.serial == _FAKE_SERIAL_SIMULATOR_ENDPOINT:
             if not os.path.exists(_FAKE_SERIAL_SIMULATOR_ENDPOINT):
                 create_fake_serial()
@@ -255,18 +256,18 @@ class Simulator(object):
         Replays a series of ICE transactions with timing information
         '''
         def read_raw_message():
-                msg_type, event_id, length = self.s.read(3)
-                length_int = ord(length)
-                logger.debug("Got a message of type: " + msg_type + 
-                        ' length: ' + str(length_int))
-                msg = self.s.read(length_int)
+            msg_type, event_id, length = self.s.read(3)
+            length_int = ord(length)
+            logger.debug("Got a message of type: " + msg_type + 
+                    ' length: ' + str(length_int))
+            msg = self.s.read(length_int)
 
-                return msg_type + event_id + length + msg
+            return msg_type + event_id + length + msg
 
         logger.info("Transaction beginning")
         last_ts = None
 
-        for line in open(self.args.transaction):
+        for line in open( self.args.transaction.strip() ):
             
             line = line.strip('\n')
             line = line.strip('\r')
@@ -309,7 +310,7 @@ class Simulator(object):
 
             else: raise Exception('Unknown Command: "' + repr(line) + '"')
 
-        time.sleep(1)
+        time.sleep(0.5)
         self.s.close()
 
         logger.info("Transaction finished.")
