@@ -103,6 +103,7 @@ class Simulator(object):
         self.s_lock = threading.Lock()
         self.s_en_event = threading.Event()
 
+        logger.debug('Serial:' + str(self.args.serial))
         if self.args.serial == _FAKE_SERIAL_SIMULATOR_ENDPOINT:
             if not os.path.exists(_FAKE_SERIAL_SIMULATOR_ENDPOINT):
                 create_fake_serial()
