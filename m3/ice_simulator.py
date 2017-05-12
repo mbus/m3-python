@@ -140,13 +140,6 @@ class Simulator(object):
             self.replay_thread.daemon = True
             self.replay_thread.start()
 
-        # Skip multithreading, just call transaction_thread in run()
-        #if self.args.transaction is not None:
-        #    self.transaction_thread = threading.Thread(target=self.transaction_thread)
-        #    self.transaction_thread.daemon = True
-        #    self.transaction_thread.start()
-            
-
 
     def run(self, background=False):
         if background:
@@ -160,7 +153,7 @@ class Simulator(object):
 
             if self.args.transaction:
                 #skip multithreading here
-                self.transaction_thread()
+                self.transaction_mode()
             else:
                 self.main_loop()
 
@@ -251,7 +244,7 @@ class Simulator(object):
     #
     #
     #
-    def transaction_thread(self):
+    def transaction_mode(self):
         ''' 
         Replays a series of ICE transactions with timing information
         '''
@@ -280,7 +273,7 @@ class Simulator(object):
             elif line.startswith('WAIT'):
                
                 #find the number after T
-                hex_tex = line.replace(' ','').split('T')[1].strip()
+                hex_tex = line.split('WAIT')[1].strip()
                 hex_tex = hex_tex.replace('0x', '').lower()
                 data = binascii.unhexlify(hex_tex)
                
@@ -293,7 +286,7 @@ class Simulator(object):
 
             elif line.startswith('SEND'):
                 # find the number after N (D could also be hex...)
-                hex_tex = line.replace(' ','').split('N')[1][1:].strip()
+                hex_tex = line.split('SEND')[1].strip()
                 hex_tex = hex_tex.replace('0x', '').lower()
                 data = binascii.unhexlify(hex_tex)
                 print ('SENDING: ' + binascii.hexlify(data))

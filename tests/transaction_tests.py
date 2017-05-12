@@ -21,7 +21,7 @@ from m3.ice import ICE
 import m3.ice_simulator
 import m3.m3_ice
 
-class TestICE(object):
+class TestTransactions(object):
     class TestFailedException(Exception):
         #logger.info('='*42 + '\nTEST FAILED\n' + '='*42)
         pass

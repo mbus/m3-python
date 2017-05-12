@@ -13,11 +13,11 @@ import binascii
 from copy import copy
 import errno
 import functools
+import os
 import socket
 import struct
 import sys
 import time
-import os
 
 from . import m3_logging
 logger = m3_logging.getGlobalLogger()
@@ -541,7 +541,6 @@ class ICE(object):
     def e_handler(self, msg_type, event_id, length, msg):
         '''
         Helper function for the 'e' command, exit
-
         '''
         logger.info('Caught "e" command, shutting down')
         #sys.exit(0)
