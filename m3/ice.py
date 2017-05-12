@@ -13,6 +13,7 @@ import binascii
 from copy import copy
 import errno
 import functools
+import os
 import socket
 import struct
 import sys
@@ -187,6 +188,8 @@ class ICE(object):
         self.B_formatter_control_bits = False
         self.msg_handler['B+'] = self.B_formatter
         self.msg_handler['b+'] = self.b_formatter
+
+        self.msg_handler['e'] = self.e_handler
 
         self.goc_ein_toggle = -1
 
@@ -511,6 +514,14 @@ class ICE(object):
         else:
             handler(addr, data)
 
+    @min_proto_version("0.4")
+    def e_handler(self, msg_type, event_id, length, msg):
+        '''
+        Helper function for the 'e' command, exit
+        '''
+        logger.info('Caught "e" command, shutting down')
+        #sys.exit(0)
+        os._exit( int(binascii.hexlify(msg) ,16) )
 
     def send_message(self, msg_type, msg='', length=None):
         if type(msg_type) != bytes:
