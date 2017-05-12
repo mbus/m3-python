@@ -320,13 +320,13 @@ class m3_common(object):
 
         return message
 
-    def __init__(self):
+    def __init__(self, args_str = None):
         self.wait_event = threading.Event()
         self._create_parent_parser()
 
         try:
             self.print_banner()
-            self.parse_args()
+            self.parse_args(args_str)
             self.ice = ICE()
             self.callback_q = Queue.Queue()
             self.install_handler()
@@ -390,17 +390,20 @@ class m3_common(object):
                 action='store_true',
                 help='Enable debugging messages.')
 
-
-    def parse_args(self):
+    def parse_args(self, args_str =None):
         self.parser = argparse.ArgumentParser(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                 description=self.DESCRIPTION,
                 epilog=self.EPILOG,
                 parents=[self.parent_parser],
                 )
+
         self.add_parse_args()
 
-        self.args = self.parser.parse_args()
+        if args_str != None:
+            self.args = self.parser.parse_args(args_str)
+        else:
+            self.args = self.parser.parse_args()
 
         #this needs to come before calls to logger.*
         #try to find debug flag
@@ -422,7 +425,7 @@ class m3_common(object):
             self.serial_path = self.guess_serial()
         else:
             logger.debug('Found serial='+self.args.serial)
-            self.serial_path = self.args.serial
+            self.serial_path = self.args.serial.strip()
 
 
         # XXX This is a bit of a hack
