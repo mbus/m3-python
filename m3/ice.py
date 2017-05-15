@@ -206,6 +206,37 @@ class ICE(object):
         # Set initial, minimal capability set
         self.capabilities = 'VvXx'
 
+    def find_baud(self, serial_device):
+       
+        # we're only trying these
+        baudrates = [  115200, 2000000] 
+        version_request = binascii.unhexlify('560000')
+        found = False
+
+        with serial.Serial(serial_device, baudrates[0], 
+                    timeout=0.05 ) as tmpSerial:
+
+            if not tmpSerial.isOpen():
+                raise self.ICE_Error("Failed to connect to temporary serial device")
+
+            for baudrate in baudrates:
+
+                logger.debug('Trying baudrate: ' + str(baudrate))
+                tmpSerial.baudrate = baudrate
+                       
+                # send a version request and see what happens
+                tmpSerial.write(version_request)
+                rxBytes = tmpSerial.read(5) #see if this times out
+                if len(rxBytes) != 0: 
+                    found = baudrate
+                    break
+            
+        if not found:
+            raise Exception("Unable to determine baudrate!")
+
+        logger.debug ("Found Baudrate: " + str(baudrate) )
+        return found 
+
     def connect(self, serial_device, baudrate=115200):
         '''
         Opens a connection to the ICE board.

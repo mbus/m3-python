@@ -330,8 +330,14 @@ class m3_common(object):
             self.ice = ICE()
             self.callback_q = Queue.Queue()
             self.install_handler()
-            self.ice.connect(self.serial_path)
+            
+            if (self.args.baudrate == -1):
+                self.args.baudrate = self.ice.find_baud(self.serial_path)
+
+            self.ice.connect(self.serial_path, 
+                            baudrate=self.args.baudrate)
             self.wakeup_goc_circuit()
+
         except NameError:
             logger.error("Abstract element missing.")
             raise
@@ -389,6 +395,10 @@ class m3_common(object):
         self.parser.add_argument('-dbg', '--debug', 
                 action='store_true',
                 help='Enable debugging messages.')
+
+        self.parser.add_argument('-baud', '--baudrate', 
+                default='-1',  type=int,
+                help="Baudrate to connect to the ICE board (115200,2000000)")
 
     def parse_args(self, args_str =None):
         self.parser = argparse.ArgumentParser(
