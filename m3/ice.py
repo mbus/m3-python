@@ -212,7 +212,7 @@ class ICE(object):
         baudrates = [  115200, 2000000] 
         version_request = binascii.unhexlify('560000')
         found = False
-
+        
         with serial.Serial(serial_device, baudrates[0], 
                     timeout=0.05 ) as tmpSerial:
 
@@ -222,7 +222,12 @@ class ICE(object):
             for baudrate in baudrates:
 
                 logger.debug('Trying baudrate: ' + str(baudrate))
-                tmpSerial.baudrate = baudrate
+                try:
+                    tmpSerial.baudrate = baudrate
+                except IOError: 
+                    logger.debug("Error changing baudrate, assuming socat port")
+                    found = baudrate
+                    break
                        
                 # send a version request and see what happens
                 tmpSerial.write(version_request)
@@ -244,7 +249,6 @@ class ICE(object):
         The ICE object configuration (e.g. message handlers) cannot be safely
         changed after this method is invoked.
         '''
-
         #5ms timeout for serial to help catch runaway packets
         self.dev = serial.Serial(serial_device, baudrate, timeout=.005)
         if self.dev.isOpen():

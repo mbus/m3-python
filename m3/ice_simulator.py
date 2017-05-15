@@ -786,6 +786,9 @@ class Simulator(object):
             except NameError:
                 logger.error("Commands issued before version negotiation?")
                 raise
+            except serial.SerialException:
+                logger.error("Serial Port closed on other end")
+                break
             except KeyboardInterrupt:
                 for th in threading.enumerate():
                     print(th)

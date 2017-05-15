@@ -320,22 +320,22 @@ class m3_common(object):
 
         return message
 
-    def __init__(self, args_str = None):
+    def __init__(self, args_list = None):
         self.wait_event = threading.Event()
         self._create_parent_parser()
 
         try:
             self.print_banner()
-            self.parse_args(args_str)
+            self.parse_args(args_list)
             self.ice = ICE()
             self.callback_q = Queue.Queue()
             self.install_handler()
             
-            if (self.args.baudrate == -1):
+            if (self.args.baudrate == 'autodetect'):
                 self.args.baudrate = self.ice.find_baud(self.serial_path)
 
             self.ice.connect(self.serial_path, 
-                            baudrate=self.args.baudrate)
+                            baudrate=int(self.args.baudrate))
             self.wakeup_goc_circuit()
 
         except NameError:
@@ -392,15 +392,16 @@ class m3_common(object):
                 action='store_true',
                 help="Use default values for all prompts.")
 
+        self.parser.add_argument('--baudrate', 
+                default='autodetect',
+                help="Baudrate to connect to the ICE board (115200,2000000)")
+
         self.parser.add_argument('-dbg', '--debug', 
                 action='store_true',
                 help='Enable debugging messages.')
 
-        self.parser.add_argument('-baud', '--baudrate', 
-                default='-1',  type=int,
-                help="Baudrate to connect to the ICE board (115200,2000000)")
 
-    def parse_args(self, args_str =None):
+    def parse_args(self, args_list =None):
         self.parser = argparse.ArgumentParser(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                 description=self.DESCRIPTION,
@@ -410,8 +411,8 @@ class m3_common(object):
 
         self.add_parse_args()
 
-        if args_str != None:
-            self.args = self.parser.parse_args(args_str)
+        if args_list != None:
+            self.args = self.parser.parse_args(args_list)
         else:
             self.args = self.parser.parse_args()
 
