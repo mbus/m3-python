@@ -252,10 +252,12 @@ class ICE(object):
 
         logger.debug('Connecting at: ' + str(baudrate) )
 
-        #5ms timeout for serial to help catch runaway packets
-        self.dev = serial.Serial(serial_device, baudrate, timeout=.005)
+        #50ms timeout for serial to help catch runaway packets
+        # cygwin cannot support 5ms timeouts 
+        self.dev = serial.Serial(serial_device, baudrate, timeout=.05)
         if self.dev.isOpen():
-            logger.info("Connected to serial device at " + self.dev.portstr)
+            logger.info("Connected to serial device at " + self.dev.portstr + 
+                " at " + str(baudrate) + " baud")
         else:
             raise self.ICE_Error("Failed to connect to serial device")
 
