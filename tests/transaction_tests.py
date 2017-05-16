@@ -30,9 +30,10 @@ class TestTransactions(object):
     def setup_class(cls, ):
        
         #make sure we start with a fresh serial port
-        serial_port=m3.ice_simulator._FAKE_SERIAL_SIMULATOR_ENDPOINT
-        if os.path.exists(serial_port):
-            os.remove(serial_port)
+        for serial_port in [ m3.ice_simulator._FAKE_SERIAL_SIMULATOR_ENDPOINT, 
+                             m3.ice_simulator._FAKE_SERIAL_CONNECTTO_ENDPOINT, ]:
+            if os.path.exists(serial_port):
+                os.remove(serial_port)
 
         cls.sim_thread = None
         filedir = os.path.dirname(os.path.realpath(__file__))
