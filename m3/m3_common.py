@@ -329,7 +329,8 @@ class m3_common(object):
             self._parse_args(args_list)
             self.ice = ICE()
             self.callback_q = Queue.Queue()
-            self.install_handler()
+            #Messes up mbus_snooper, why was this here?
+            #self.install_handler()
             
             if (self.args.baudrate == 'autodetect'):
                 self.args.baudrate = self.ice.find_baud(self.serial_path)
