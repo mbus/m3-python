@@ -940,10 +940,10 @@ class mbus_snooper(object):
         self.ice.msg_handler['B++'] = self._callback
         self.ice.msg_handler['b++'] = self._callback
 
-        self.ice.ice_set_baudrate_to_2000000()
-        def _atexit_reset_baudrate():
-            self.ice.ice_set_baudrate_to_115200()
-        atexit.register(_atexit_reset_baudrate)
+        #self.ice.ice_set_baudrate_to_2000000()
+        #def _atexit_reset_baudrate():
+        #    self.ice.ice_set_baudrate_to_115200()
+        #atexit.register(_atexit_reset_baudrate)
 
         self.ice.mbus_set_internal_reset(True)
         self.ice.mbus_set_master_onoff(False)

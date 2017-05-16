@@ -249,6 +249,9 @@ class ICE(object):
         The ICE object configuration (e.g. message handlers) cannot be safely
         changed after this method is invoked.
         '''
+
+        logger.debug('Connecting at: ' + str(baudrate) )
+
         #5ms timeout for serial to help catch runaway packets
         self.dev = serial.Serial(serial_device, baudrate, timeout=.005)
         if self.dev.isOpen():
@@ -318,6 +321,7 @@ class ICE(object):
                 logger.warn("Suppressed.")
             return
         try:
+            
             handler(msg_type, event_id, length, msg)
         except self.NotConnectedError:
             # The ICE board can send async messages before the library is set up
