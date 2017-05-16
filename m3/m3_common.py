@@ -326,7 +326,7 @@ class m3_common(object):
 
         try:
             self.print_banner()
-            self.parse_args(args_list)
+            self._parse_args(args_list)
             self.ice = ICE()
             self.callback_q = Queue.Queue()
             self.install_handler()
@@ -400,8 +400,12 @@ class m3_common(object):
                 action='store_true',
                 help='Enable debugging messages.')
 
+    # cannot break this API
+    def parse_args(self):
+        return _parse_args(self)
 
-    def parse_args(self, args_list =None):
+    # private version of parse_args
+    def _parse_args(self, args_list =None):
         self.parser = argparse.ArgumentParser(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                 description=self.DESCRIPTION,
