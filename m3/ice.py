@@ -321,6 +321,7 @@ class ICE(object):
                 logger.warn("Suppressed.")
             return
         try:
+            
             handler(msg_type, event_id, length, msg)
         except self.NotConnectedError:
             # The ICE board can send async messages before the library is set up
