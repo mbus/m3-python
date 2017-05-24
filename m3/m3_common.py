@@ -329,6 +329,12 @@ class m3_common(object):
             self._parse_args(args_list)
             self.ice = ICE()
             self.callback_q = Queue.Queue()
+
+            #here for backwards compatability
+            try:
+                self.install_handler()
+            except AttributeError:
+                pass
             
             if (self.args.baudrate == 'autodetect'):
                 self.args.baudrate = self.ice.find_baud(self.serial_path)
