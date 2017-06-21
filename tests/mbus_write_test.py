@@ -105,8 +105,9 @@ class TestMbusWrite(object):
                                     '-y',
                                     '-s '+ serial_port,
                                     'mbus',
+                                    'program',
                                     self.tmp_path])
-        self.driver.cmd_mbus()
+        self.driver.mbus_controller.cmd_program()
         
         
         # I have no idea how this works.....

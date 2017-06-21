@@ -13,7 +13,7 @@ from .m3_common import m3_common
 from .m3_common import mbus_snooper
 from .m3_common import ein_programmer
 from .m3_common import goc_programmer
-from .m3_common import mbus_programmer
+from .m3_mbus import mbus_controller 
 
 from . import m3_logging
 logger = m3_logging.getGlobalLogger()
@@ -74,8 +74,7 @@ class m3_ice(m3_common):
         self.parser_mbus = self.subparsers.add_parser('mbus',
                 parents=[self.parent_parser],
                 help='Send commands via the MBUS protocol')
-        self.mbus_programmer = mbus_programmer(self,self.parser_mbus)
-        self.parser_mbus.set_defaults(func=self.cmd_mbus)
+        self.mbus_controller = mbus_controller(self,self.parser_mbus)
 
 
     def cmd_softreset(self):
@@ -120,8 +119,9 @@ class m3_ice(m3_common):
         #goc_programmer(self).cmd()
         pass
 
-    def cmd_mbus(self):
-        self.mbus_programmer.cmd()
+    # now handled by mbus_controller internally 
+    #def cmd_mbus(self):
+    #    pass
 
 
 def cmd():
