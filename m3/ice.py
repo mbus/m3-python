@@ -800,9 +800,16 @@ class ICE(object):
     def ice_set_baudrate_to_3_megabaud(self):
         self.ice_set_baudrate(0x0007, 3000000)
 
+
     ## GOC VS EIN HANDLING ##
-    def set_goc_ein(self, goc=0, ein=0, restore_clock_freq=True):
-        if goc == ein:
+    def get_goc_enabled(self):
+        return self.goc_ein_toggle > 0
+
+    def get_ein_enabled(self):
+        return self.goc_ein_toggle == 0
+
+    def set_goc_ein(self, goc=0, ein=0, goc_ir=0, restore_clock_freq=True):
+        if ( (goc>0) + (ein>0) + (goc_ir>0) ) > 1:
             raise self.ICE_Error("Internal consistency goc vs ein failure")
 
         if self.minor == 1:
@@ -816,7 +823,7 @@ class ICE(object):
             if self.goc_ein_toggle == 0:
                 # Already in ein mode, nothing to do
                 return
-            if self.goc_ein_toggle == 1:
+            if self.goc_ein_toggle >= 1:
                 # If we were set to GOC mode, capture the clock frequency
                 self.goc_freq_divisor = self.goc_ein_get_freq_divisor()
             if restore_clock_freq:
@@ -829,9 +836,15 @@ class ICE(object):
             self.send_message_until_acked('o', struct.pack("BB", ord('p'), 0))
             self.goc_ein_toggle = 0
             logger.debug("Set goc/ein toggle to ein")
-        else:
+        elif (goc >= 1) or (goc_ir >= 1):
+            assert( goc != goc_ir )
+
+            # 1: visiable LED, 3: infrared LED
+            goc_ctrl_byte = 1 if (goc>=1) else 3
+            print ("ANDREW: " + str(goc_ctrl_byte))
+
             # Set to GOC mode
-            if self.goc_ein_toggle == 1:
+            if self.goc_ein_toggle == goc_ctrl_byte:
                 return
             if self.goc_ein_toggle == 0:
                 self.ein_freq_divisor = self.goc_ein_get_freq_divisor()
@@ -842,9 +855,11 @@ class ICE(object):
                 except AttributeError:
                     self.goc_ein_set_freq_divisor(self._goc_freq_in_hz_to_divisor(self.GOC_SPEED_DEFAULT_HZ))
                     logger.debug("Set GOC to default clock frequency")
-            self.send_message_until_acked('o', struct.pack("BB", ord('p'), 1))
-            self.goc_ein_toggle = 1
+            self.send_message_until_acked('o', 
+                    struct.pack("BB", ord('p'), goc_ctrl_byte))
+            self.goc_ein_toggle = goc_ctrl_byte
             logger.debug("Set goc/ein toggle to goc")
+        else: raise Exception('Unsupported GOC/EIN mode')
 
     @max_proto_version("0.2")
     def goc_ein_get_freq_divisor_max_0_2(self):
@@ -926,7 +941,8 @@ class ICE(object):
         significantly lower bandwidth of the GOC interface, there should be no
         interruption in message transmission.
         '''
-        self.set_goc_ein(goc=1)
+        if not self.get_goc_enabled():
+            self.set_goc_ein(goc=1)
 
         if show_progress:
             e = threading.Event()
@@ -946,7 +962,8 @@ class ICE(object):
         '''
         Gets the GOC frequency.
         '''
-        self.set_goc_ein(goc=1)
+        if not self.get_goc_enabled():
+            self.set_goc_ein(goc=1)
 
         if self.minor == 3:
             logger.warn('ICE Firmware v0.3 reports wrong goc freq value.'\
@@ -977,7 +994,8 @@ class ICE(object):
         '''
         Sets the GOC frequency.
         '''
-        self.set_goc_ein(goc=1)
+        if not self.get_goc_enabled():
+            self.set_goc_ein(goc=1)
 
         # Send a 3-byte value N, where 2 MHz / N == clock speed
         self.goc_ein_set_freq_divisor(self._goc_freq_in_hz_to_divisor(freq_in_hz))
@@ -991,7 +1009,8 @@ class ICE(object):
         '''
         Get the current ambient GOC power.
         '''
-        self.set_goc_ein(goc=1)
+        if not self.get_goc_enabled():
+            self.set_goc_ein(goc=1)
 
         self.min_version(0.2)
         resp = self.send_message_until_acked('O', struct.pack("B", ord('o')))
@@ -1010,7 +1029,8 @@ class ICE(object):
         the state of the GOC light when it's not doing anything else (e.g. so
         you can leave the light on for charging or something similar)
         '''
-        self.set_goc_ein(goc=1)
+        if not self.get_goc_enabled():
+            self.set_goc_ein(goc=1)
 
         self.min_version(0.2)
         msg = struct.pack("BB", ord('o'), onoff)
@@ -1518,7 +1538,8 @@ class ICE(object):
         FPGA. These fragments will be combined on the ICE board. There should be
         no interruption in message transmission.
         '''
-        self.set_goc_ein(ein=1)
+        if not self.get_ein_enabled():
+            self.set_goc_ein(ein=1)
 
         self.min_version(0.2)
         ret = self._fragment_sender('f', msg)
