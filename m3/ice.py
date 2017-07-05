@@ -841,7 +841,6 @@ class ICE(object):
 
             # 1: visiable LED, 3: infrared LED
             goc_ctrl_byte = 1 if (goc>=1) else 3
-            print ("ANDREW: " + str(goc_ctrl_byte))
 
             # Set to GOC mode
             if self.goc_ein_toggle == goc_ctrl_byte:
