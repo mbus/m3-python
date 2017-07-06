@@ -749,9 +749,9 @@ class goc_programmer(object):
             self.m3_ice.do_default("Would you like to send the DMA start interrupt?", self.DMA_start_interrupt)
 
     def set_goc_led_type(self, led):
-        if led in ['white','White','WHITE']:
+        if led.lower() in ['white']:
             pass # default
-        elif led in ['IR','ir','Infrared','infrared','INFRARED']:
+        elif led.lower() in ['ir','infrared']:
             logger.info('Setting LED to Infrared')
             self.m3_ice.ice.set_goc_ein(goc_ir=1, restore_clock_freq=False)
         else: raise Exception('Unsupported LED type: ' + str(led))
