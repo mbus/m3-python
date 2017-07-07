@@ -610,6 +610,13 @@ class goc_programmer(object):
                 type=float,
                 )
 
+        parser.add_argument('--led',
+                help="LED type for GOC to use (white/ir)",
+                default='white',
+                type=str,
+                )
+
+
         self.subparsers = parser.add_subparsers(
                 title='GOC Commands',
                 description='GOC Actions supported by the ICE board',
@@ -642,9 +649,11 @@ class goc_programmer(object):
         # goc.py goc_generate_mbus_message.py goc_off.py goc_to_image.py goc_v2.py
 
     def cmd_on(self):
+        self.set_goc_led_type(self.m3_ice.args.led)
         self.m3_ice.ice.goc_set_onoff(True)
 
     def cmd_off(self):
+        self.set_goc_led_type(self.m3_ice.args.led)
         self.m3_ice.ice.goc_set_onoff(False)
 
     def _generic_startup(self):
@@ -669,6 +678,8 @@ class goc_programmer(object):
         self.set_fast_frequency()
 
     def cmd_message(self):
+        self.set_goc_led_type(self.m3_ice.args.led)
+
         addr = self.m3_ice.args.ADDRESS
         addr = addr.replace('0x', '')
         # Flip the order of addr bytes to make human entry friendly
@@ -710,6 +721,7 @@ class goc_programmer(object):
 
     def cmd_flash(self):
         self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
+        self.set_goc_led_type(self.m3_ice.args.led)
 
         logger.info("")
         logger.info("Would you like to run after programming? If you do not")
@@ -735,6 +747,14 @@ class goc_programmer(object):
         else:
             self.m3_ice.do_default("Would you like to read back the program to validate?", self.validate_bin)
             self.m3_ice.do_default("Would you like to send the DMA start interrupt?", self.DMA_start_interrupt)
+
+    def set_goc_led_type(self, led):
+        if led.lower() in ['white']:
+            pass # default
+        elif led.lower() in ['ir','infrared']:
+            logger.info('Setting LED to Infrared')
+            self.m3_ice.ice.set_goc_ein(goc_ir=1, restore_clock_freq=False)
+        else: raise Exception('Unsupported LED type: ' + str(led))
 
     def set_slow_frequency(self):
         self.m3_ice.ice.goc_set_frequency(self.m3_ice.args.goc_speed)
