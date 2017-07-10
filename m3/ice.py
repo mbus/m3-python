@@ -18,6 +18,7 @@ import socket
 import struct
 import sys
 import time
+import os
 
 from . import m3_logging
 logger = m3_logging.getGlobalLogger()
@@ -1174,7 +1175,8 @@ class ICE(object):
         if type(addr) != bytes:
             addr = bytes(addr, 'utf-8')
         if len(addr) > 4:
-            raise self.FormatError("Address too long")
+            raise self.FormatError("Address too long: " + str(addr) +\
+                                    ' len:' + str(len(addr)))
         while len(addr) < 4:
             zero = bytes(1)
             addr = zero + addr
@@ -1432,6 +1434,13 @@ class ICE(object):
         DEFAULT: OFF
         '''
         self.min_version(0.2)
+        if isinstance(onoff, str):
+            onoff = True if onoff in \
+                    ['On', 'on'] else False
+        elif isinstance(onoff, bool):
+            pass
+        else: raise Exception("Bad arg for " + __name__ )
+
         msg = struct.pack("BB", ord('m'), onoff)
         self.send_message_until_acked('m', msg)
 
@@ -1804,5 +1813,16 @@ class ICE(object):
 
         self.send_message_until_acked('p', struct.pack("BBB", ord('o'), rail, onoff))
 
+
+    def _raw_send_bytes(self, passcode, msg):
+        if (passcode != 'BadIdeaV3'):
+            raise exception("Do not use this!")
+        print('WARNING:  sending raw message: ', binascii.hexlify(msg))
+        self.dev.write(msg)
+
+        # Ugly hack so python allows keyboard interrupts
+        return self.sync_queue.get(True, self.ONEYEAR)
+
 if __name__ == '__main__':
     logger.setLevel(level=logging.DEBUG)
+
