@@ -13,6 +13,7 @@ from .m3_common import m3_common
 from .m3_common import mbus_snooper
 from .m3_common import ein_programmer
 from .m3_common import goc_programmer
+
 from .m3_mbus import mbus_controller 
 
 from . import m3_logging
@@ -74,6 +75,7 @@ class m3_ice(m3_common):
         self.parser_mbus = self.subparsers.add_parser('mbus',
                 parents=[self.parent_parser],
                 help='Send commands via the MBUS protocol')
+
         self.mbus_controller = mbus_controller(self,self.parser_mbus)
 
 
