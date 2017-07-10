@@ -557,8 +557,8 @@ class m3_common(object):
         self.ice.power_set_onoff(0,True)
         if wait_for_rails_to_settle:
             printing_sleep(1.0)
-            logger.info("Waiting 8 seconds for power rails to settle")
-            printing_sleep(8.0)
+            logger.info("Waiting 2 seconds for power rails to settle")
+            printing_sleep(2.0)
 
     def reset_m3(self):
         logger.info("M3 0.6V => OFF (reset controller)")
