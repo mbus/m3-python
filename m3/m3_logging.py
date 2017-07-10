@@ -3,6 +3,9 @@
 
 import os
 import logging
+
+#from pdb import set_trace as bp
+
 logging.captureWarnings(True)
 
 TRACE_LEVEL=25
@@ -111,11 +114,13 @@ def get_logger(name):
 #	except KeyError:
 #		return logging.INFO
 
+logger = get_logger(__name__)
+
 def LoggerSetLevel(lvl):
-    if lvl in ['DEBUG', 'Debug', 'debug']:
-       logger.setLevel(logging.DEBUG)
-    elif lvl in ['INFO', 'Info', 'info']:
-       logger.setLevel(logging.INFO)
+    if lvl.lower() in ['debug']:
+       logger.setLevel ( logging.DEBUG)
+    elif lvl.lower() in ['info']:
+       logger.setLevel ( logging.INFO)
     else: raise Exception('unsupported level')
 
 logger = get_logger(__name__)
