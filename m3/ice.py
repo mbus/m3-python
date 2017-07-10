@@ -13,11 +13,11 @@ import binascii
 from copy import copy
 import errno
 import functools
-import os
 import socket
 import struct
 import sys
 import time
+import os
 
 from . import m3_logging
 logger = m3_logging.getGlobalLogger()
@@ -1174,7 +1174,8 @@ class ICE(object):
         if type(addr) != bytes:
             addr = bytes(addr, 'utf-8')
         if len(addr) > 4:
-            raise self.FormatError("Address too long")
+            raise self.FormatError("Address too long: " + str(addr) +\
+                                    ' len:' + str(len(addr)))
         while len(addr) < 4:
             zero = bytes(1)
             addr = zero + addr
@@ -1432,6 +1433,13 @@ class ICE(object):
         DEFAULT: OFF
         '''
         self.min_version(0.2)
+        if isinstance(onoff, str):
+            onoff = onoff.lower()
+            onoff = True if onoff in ['on'] else False
+        elif isinstance(onoff, bool):
+            pass
+        else: raise Exception("Bad arg for " + __name__ )
+
         msg = struct.pack("BB", ord('m'), onoff)
         self.send_message_until_acked('m', msg)
 
@@ -1806,3 +1814,4 @@ class ICE(object):
 
 if __name__ == '__main__':
     logger.setLevel(level=logging.DEBUG)
+
