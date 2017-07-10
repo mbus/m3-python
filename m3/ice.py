@@ -13,7 +13,6 @@ import binascii
 from copy import copy
 import errno
 import functools
-import os
 import socket
 import struct
 import sys
@@ -1435,8 +1434,8 @@ class ICE(object):
         '''
         self.min_version(0.2)
         if isinstance(onoff, str):
-            onoff = True if onoff in \
-                    ['On', 'on'] else False
+            onoff = onoff.lower()
+            onoff = True if onoff in ['on'] else False
         elif isinstance(onoff, bool):
             pass
         else: raise Exception("Bad arg for " + __name__ )
