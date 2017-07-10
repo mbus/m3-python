@@ -1021,6 +1021,7 @@ class mbus_programmer( object):
 
 
 
+
 class mbus_snooper(object):
     TITLE = "MBus Snooper"
     DEFAULT_SNOOP_PREFIX="0111"
