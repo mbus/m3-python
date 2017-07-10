@@ -13,7 +13,6 @@ import binascii
 from copy import copy
 import errno
 import functools
-import os
 import socket
 import struct
 import sys
