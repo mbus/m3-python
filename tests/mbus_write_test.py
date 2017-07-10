@@ -107,9 +107,10 @@ class TestMbusWrite(object):
                                     'mbus',
                                     'program',
                                     self.tmp_path])
+        
         self.driver.mbus_controller.cmd_program()
-        
-        
+
+                
         # I have no idea how this works.....
 
 

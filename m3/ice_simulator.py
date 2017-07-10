@@ -328,6 +328,9 @@ class Simulator(object):
                 event_id = ord(event_id)
                 length = ord(length)
                 msg = self.s.read(length)
+    
+                #slight hack to simplify respond()
+                self.event = event_id
 
                 if msg_type == 'V':
                     if self.args.ice_version == 1:
@@ -336,27 +339,26 @@ class Simulator(object):
                         self.respond(binascii.unhexlify('0001'))
                     elif self.args.ice_version == 3:
                         self.respond(binascii.unhexlify('000300020001'))
+                    elif self.args.ice_version == 4:
+                        self.respond(binascii.unhexlify('0004000300020001'))
                     else:
                         raise ValueError("Unknown ice version: %d" % (self.args.ice_version))
                 elif msg_type == 'v':
-                    if msg == binascii.unhexlify('0003'):
-                        CLOCK_FREQ = 4e6
+                    CLOCK_FREQ = 4e6
+                    if msg == binascii.unhexlify('0004'):
+                        minor = 4
+                    elif msg == binascii.unhexlify('0003'):
                         minor = 3
-                        self.ack()
-                        logger.info("Negotiated to protocol version 0.3")
                     elif msg == binascii.unhexlify('0002'):
-                        CLOCK_FREQ = 4e6
                         minor = 2
-                        self.ack()
-                        logger.info("Negotiated to protocol version 0.2")
                     elif msg == binascii.unhexlify('0001'):
                         CLOCK_FREQ = 2e6
                         minor = 1
-                        self.ack()
-                        logger.info("Negotiated to protocol version 0.1")
                     else:
                         logger.error("Request for unknown version: " + msg)
                         raise Exception
+                    logger.info("Negotiated to protocol version 0."+ str(minor))
+                    self.ack()
 
                 elif msg_type == '?':
                     min_proto(2)
@@ -825,7 +827,7 @@ class Simulator(object):
     def get_parser():
         parser = argparse.ArgumentParser()
 
-        parser.add_argument("-i", "--ice-version", default=3, type=int, help="Maximum ICE Version to emulate (1, 2, or 3)")
+        parser.add_argument("-i", "--ice-version", default=4, type=int, help="Maximum ICE Version to emulate (1, 2, or 3)")
         parser.add_argument("-s", "--serial", default=_FAKE_SERIAL_SIMULATOR_ENDPOINT, help="Serial port to connect to")
         parser.add_argument("-S", "--suppress-fake-serial", action='store_false', help="Do not create a software serial tunnerl")
         parser.add_argument("--i2c-mask", default=DEFAULT_I2C_MASK, help="Address mask for fake_ice i2c address")
