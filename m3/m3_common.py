@@ -60,11 +60,12 @@ class m3_common(object):
 
     def default_value(self, prompt, default, extra=None, invert=False):
         if invert and (extra is None):
-            raise RuntimeError, "invert & !extra ?"
+            raise RuntimeError( "invert & !extra ?")
         if self.args.yes:
             fn = print
         else:
-            fn = raw_input
+            try: fn = raw_input
+            except NameError: fn = input #Py3 version
         if extra:
             r = fn(prompt + ' [' + default + extra + ']: ')
         else:
@@ -495,7 +496,12 @@ class m3_common(object):
                 for i in range(len(candidates)):
                     logger.info("\t[{}] {}".format(i, candidates[i]))
                 try:
-                    resp = raw_input("Choose a serial port (Ctrl-C to quit): ").strip()
+                    resp = raw_input("Choose a serial port "\
+                                "(Ctrl-C to quit): ").strip()
+                except NameError:  
+                    #Py3
+                    resp = input("Choose a serial port "\
+                                "(Ctrl-C to quit): ").strip()
                 except KeyboardInterrupt:
                     sys.exit(1)
                 try:
