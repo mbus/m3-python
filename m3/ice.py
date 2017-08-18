@@ -252,7 +252,13 @@ class ICE(object):
 
         #500ms timeout for serial to help catch runaway packets
         # cygwin cannot support 5ms or 50ms timeouts 
-        self.dev = serial.Serial(serial_device, baudrate, timeout=0.5)
+        # m3_ice_sim doesn't support baudrate
+        try:
+            self.dev = serial.Serial(serial_device, baudrate, timeout=0.5)
+        except IOError:
+            logger.warn("Skipping baudrate?")
+            self.dev = serial.Serial(serial_device, timeout=0.5)
+
         if self.dev.isOpen():
             logger.info("Connected to serial device at " + self.dev.portstr + 
                 " at " + str(baudrate) + " baud")
