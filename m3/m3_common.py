@@ -619,6 +619,12 @@ class goc_programmer(object):
                 type=str,
                 )
 
+        parser.add_argument('--chip_id',
+                help="Chip ID of device to be GOC messaged",
+                default='0',
+                type=str,
+                )
+
 
         self.subparsers = parser.add_subparsers(
                 title='GOC Commands',
@@ -708,10 +714,16 @@ class goc_programmer(object):
         else:
             run_after = True
 
+        try:
+            chip_id = int(self.m3_ice.args.chip_id)
+        except ValueError:
+            chip_id = int(self.m3_ice.args.chip_id,16)
+
         message = self.m3_ice.build_injection_message(
                 memory_address=addr,
                 hexencoded_data=data,
                 run_after=run_after,
+                chip_id = chip_id,
                 )
 
         self._generic_startup()
@@ -726,6 +738,11 @@ class goc_programmer(object):
         self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
         self.set_goc_led_type(self.m3_ice.args.led)
 
+        try:
+            chip_id = int(self.m3_ice.args.chip_id)
+        except ValueError:
+            chip_id = int(self.m3_ice.args.chip_id,16)
+
         logger.info("")
         logger.info("Would you like to run after programming? If you do not")
         logger.info("have GOC start the program, you will be prompted to send")
@@ -737,7 +754,11 @@ class goc_programmer(object):
 
         self._generic_startup()
 
-        message = self.m3_ice.build_injection_message(hexencoded_data=self.m3_ice.hexencoded, run_after=self.m3_ice.run_after)
+        message = self.m3_ice.build_injection_message(
+                        hexencoded_data=self.m3_ice.hexencoded, 
+                        run_after=self.m3_ice.run_after,
+                        chip_id = chip_id,
+                        )
         logger.debug("Sending: " + message)
         self.send_goc_message(message)
 
