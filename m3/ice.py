@@ -1269,8 +1269,15 @@ class ICE(object):
         if prefix is None:
             ones, zeros = (0xf, 0xf)
         else:
+            if prefix.startswith('0x'):
+                try: # try converting from hex
+                    prefix = "{0:b}".format( int(prefix,16) )
+                except: 
+                    raise self.FormatError("Malformed Prefix")
+
             if len(prefix) != 4:
                 raise self.FormatError("Prefix must be exactly 4 bits")
+
             ones, zeros = self.string_to_masks(prefix)
 
         self.send_message_until_acked('m', struct.pack("B"*(1+1),
