@@ -1135,10 +1135,6 @@ class mbus_snooper(object):
         self._callback_thread.daemon = True
         self._callback_thread.start()
 
-        self.ice.B_formatter_control_bits = True
-        self.ice.msg_handler['B++'] = self._callback
-        self.ice.msg_handler['b++'] = self._callback
-
         self.ice.mbus_set_internal_reset(True)
         self.ice.mbus_set_master_onoff(False)
         self.ice.mbus_set_snoop(True)
@@ -1162,5 +1158,12 @@ class mbus_snooper(object):
             self.reset_thread = threading.Thread(target=reset_mbus)
             self.reset_thread.daemon = True
             self.reset_thread.start()
+
+        # _callback uses reset_event, so this needs to be after 
+        # it is defined
+        self.ice.B_formatter_control_bits = True
+        self.ice.msg_handler['B++'] = self._callback
+        self.ice.msg_handler['b++'] = self._callback
+
 
 
