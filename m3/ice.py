@@ -11,6 +11,7 @@ from builtins import (
 
 import binascii
 from copy import copy
+from copy import deepcopy
 import errno
 import functools
 import socket
@@ -327,7 +328,6 @@ class ICE(object):
                 logger.warn("Suppressed.")
             return
         try:
-            
             handler(msg_type, event_id, length, msg)
         except self.NotConnectedError:
             # The ICE board can send async messages before the library is set up
@@ -468,7 +468,8 @@ class ICE(object):
                 sys.stdout.flush()
                 logger.debug("Got a complete I2C transaction of length %d bytes. Forwarding..." % (len(self.d_frag)))
                 sys.stdout.flush()
-                self.spawn_handler('d+', event_id, len(self.d_frag), copy(self.d_frag))
+                self.spawn_handler('d+', event_id, len(self.d_frag), \
+                        deepcopy(self.d_frag))
                 self.d_frag = bytes()
             else:
                 logger.debug("Got an I2C fragment... thus far %d bytes received:" % (len(self.d_frag)))
@@ -493,7 +494,8 @@ class ICE(object):
             # XXX: Make version dependent
             if length != 255:
                 logger.debug("Got a complete MBus message of length %d bytes. Forwarding..." % (len(self.b_frag)))
-                self.spawn_handler('b+', event_id, len(self.b_frag), copy(self.b_frag))
+                self.spawn_handler('b+', event_id, len(self.b_frag), \
+                        deepcopy(self.b_frag))
                 self.b_frag = bytes()
             else:
                 logger.debug("Got a MBus fragment... thus far %d bytes received:" % (len(self.b_frag)))
@@ -518,7 +520,8 @@ class ICE(object):
                 sys.stdout.flush()
                 logger.debug("Got a complete snooped MBus message. Length %d bytes. Forwarding..." % (len(self.B_frag)))
                 sys.stdout.flush()
-                self.spawn_handler('B+', event_id, len(self.B_frag), copy(self.B_frag))
+                self.spawn_handler('B+', event_id, len(self.B_frag), \
+                        deepcopy(self.B_frag))
                 self.B_frag = bytes()
             else:
                 logger.debug("Got a snoop MBus fragment... thus far %d bytes received:" % (len(self.B_frag)))
