@@ -123,11 +123,14 @@ class m3_common(object):
         if goc_version not in (1,2,3):
             raise NotImplementedError("Bad GOC Version?")
 
+
         if chip_id_mask is None:
+            assert(False) # are we ever passing in None still?
             if goc_version == 1:
                 chip_id_mask = 0
             elif goc_version in (2,3):
                 chip_id_mask = 0xF
+
 
         HEADER = ''
 
@@ -595,6 +598,9 @@ class goc_programmer(object):
     TITLE = "GOC Programmer"
     #SLOW_FREQ_IN_HZ = 0.625
     SLOW_FREQ_IN_HZ =15 
+    CHIP_ID_DEFAULT=0x0
+    CHIP_ID_MASK_DEFAULT=0xF
+
 
     def __init__(self, m3_ice, parser):
         self.m3_ice = m3_ice
@@ -626,10 +632,17 @@ class goc_programmer(object):
                 )
 
         parser.add_argument('--chip_id',
-                help="Chip ID of device to be GOC messaged",
-                default='0',
+                help="Chip ID of device to be GOC messaged (Hex)",
+                default=hex(goc_programmer.CHIP_ID_DEFAULT),
                 type=str,
                 )
+
+        parser.add_argument('--chip_id_mask',
+                help="Chip ID Mask of device to be GOC messaged (Hex)",
+                default=hex(goc_programmer.CHIP_ID_MASK_DEFAULT),
+                type=str,)
+
+
 
 
         self.subparsers = parser.add_subparsers(
@@ -695,6 +708,10 @@ class goc_programmer(object):
     def cmd_message(self):
         self.set_goc_led_type(self.m3_ice.args.led)
 
+        chip_id = int(self.m3_ice.args.chip_id,16)
+        chip_id_mask = int(self.m3_ice.args.chip_id_mask,16)
+        self._chip_id_sanity(chip_id, chip_id_mask)
+
         addr = self.m3_ice.args.ADDRESS
         addr = addr.replace('0x', '')
         # Flip the order of addr bytes to make human entry friendly
@@ -720,19 +737,15 @@ class goc_programmer(object):
         else:
             run_after = True
 
-        try:
-            chip_id = int(self.m3_ice.args.chip_id)
-        except ValueError:
-            chip_id = int(self.m3_ice.args.chip_id,16)
+        self._generic_startup()
 
         message = self.m3_ice.build_injection_message(
                 memory_address=addr,
                 hexencoded_data=data,
                 run_after=run_after,
                 chip_id = chip_id,
+                chip_id_mask = chip_id_mask,
                 )
-
-        self._generic_startup()
 
         logger.debug("Sending: " + message)
         self.send_goc_message(message)
@@ -743,11 +756,10 @@ class goc_programmer(object):
     def cmd_flash(self):
         self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
         self.set_goc_led_type(self.m3_ice.args.led)
-
-        try:
-            chip_id = int(self.m3_ice.args.chip_id)
-        except ValueError:
-            chip_id = int(self.m3_ice.args.chip_id,16)
+        
+        chip_id = int(self.m3_ice.args.chip_id,16)
+        chip_id_mask = int(self.m3_ice.args.chip_id_mask,16)
+        self._chip_id_sanity(chip_id, chip_id_mask)
 
         logger.info("")
         logger.info("Would you like to run after programming? If you do not")
@@ -764,6 +776,7 @@ class goc_programmer(object):
                         hexencoded_data=self.m3_ice.hexencoded, 
                         run_after=self.m3_ice.run_after,
                         chip_id = chip_id,
+                        chip_id_mask = chip_id_mask
                         )
         logger.debug("Sending: " + message)
         self.send_goc_message(message)
@@ -818,6 +831,15 @@ class goc_programmer(object):
         raise NotImplementedError("If you need this, let me know")
         #logger.info("Sending 0x88 0x00000000")
         #self.send(binascii.unhexlify("88"), binascii.unhexlify("00000000"))
+
+    def _chip_id_sanity(self, chip_id, chip_id_mask):
+        if( chip_id != goc_programmer.CHIP_ID_DEFAULT and \
+                    chip_id_mask == goc_programmer.CHIP_ID_MASK_DEFAULT):
+            logger.warn("non-default chip_id set, but chip_id_mask will "\
+                        "mask it out.")
+        elif (chip_id == goc_programmer.CHIP_ID_DEFAULT and \
+                    chip_id_mask != goc_programmer.CHIP_ID_MASK_DEFAULT):
+            logger.warn("default chip_id with non-default chip_id_mask")
 
 
 class ein_programmer(object):
