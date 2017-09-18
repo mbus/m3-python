@@ -17,7 +17,7 @@ from .m3_common import goc_programmer
 from .m3_mbus import mbus_controller 
 
 from . import m3_logging
-logger = m3_logging.getGlobalLogger()
+logger = m3_logging.getLogger(__name__)
 
 class m3_ice(m3_common):
     TITLE = "M3 ICE Interface"

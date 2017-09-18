@@ -42,7 +42,7 @@ import imp
 from . import __version__ 
 
 from . import m3_logging
-logger = m3_logging.getGlobalLogger()
+logger = m3_logging.getLogger(__name__)
 
 
 
