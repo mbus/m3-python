@@ -19,7 +19,7 @@ addons:
 
 
 install: 
-    pip install tox-travis
-    pip install PyMulator
+    - pip install tox-travis
+    - pip install PyMulator
 script: tox
 
