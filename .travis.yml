@@ -17,9 +17,6 @@ addons:
       - socat
 
 
-before_script:
-    pip install --user PyMulator
-
 install: pip install tox-travis
 script: tox
 

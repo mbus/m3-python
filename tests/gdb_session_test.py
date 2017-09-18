@@ -70,11 +70,13 @@ class TestGdbFull(object):
             while True:
                 try: 
                     driver.mbus_controller.cmd_gdb()
-                    break
+                    return
                 except m3.m3_gdb.GdbRemote.PortTakenException as e:
                     this.log.warn("using another port")
                     this.port = int(driver.mbus_controller.m3_ice.args.port) + 1
                     driver.mbus_controller.m3_ice.args.port = str(this.port)
+                except:
+                    raise
 
         def cmd_noresp(sock, cmd):
             this.log.debug('TX: ' + cmd)
@@ -97,7 +99,7 @@ class TestGdbFull(object):
         serial_port=m3.ice_simulator._FAKE_SERIAL_CONNECTTO_ENDPOINT
         this.log.info('Using ' + str(serial_port))
 
-        this.driver = m3.m3_ice.m3_ice(['--debug',
+        this.driver = m3.m3_ice.m3_ice([#'--debug',
                                     '-s '+ serial_port,
                                     'mbus',
                                     'gdb',
@@ -508,12 +510,15 @@ class TestGdbFull(object):
         assert(rx_resp == '$OK#9a')
 
         #need to add ice_terminate? 
+        s.close()
+
+        servTid.join()
         
 
 # Now I have an idea how this works.....
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(message)s")
+    #logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(message)s")
 
     import nose
     result = nose.run( defaultTest=__name__, )
