@@ -483,11 +483,15 @@ class GdbCtrl(object):
         try:
             from PyMulator.PyMulator import PyMulator
             this.mulator = PyMulator(this.rf, this.mem,debug=True)
-        except:  
+        except ImportError: 
+            this.mulator = None
             this.log.warn('='*40 + '\n' + \
                          '\tPyMulator not found\n' +\
                          '\tSingle-stepping will not work!\n' + \
+                         '\t Please install PyMulator:\n' +\
+                         '\t $ pip install PyMulator\n' +\
                          '='*40)
+                                         
 
         this.regs = [   'r0', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 
                         'r7', 'r8', 'r9', 'r10', 'r11', 'r12', 'sp', 
@@ -694,7 +698,13 @@ class GdbCtrl(object):
         # if the prc is halted, the reg file is valid 
         if True:
             this.log.debug("Soft-Stepping with Mulator")
-            this.mulator.stepi()
+            try:
+                this.mulator.stepi()
+            except AttributeError: 
+                this.log.error("Stepping without PyMulator")
+                this.log.error("CRASHING")
+                raise
+
             break_addr = this.rf.getLocal('pc') - 4
             this.log.debug("Next PC: " + hex(break_addr) )
        
@@ -917,7 +927,6 @@ if __name__ == '__main__':
 
         if cmd == 'cmd__quit_': 
             print ('GDB CTRL Quiting')
-            ctrl.cmd_D()
             break
         else : 
             func = getattr(ctrl, cmd)
