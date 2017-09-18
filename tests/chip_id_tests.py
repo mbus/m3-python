@@ -10,7 +10,7 @@ import time
 import binascii
 
 import logging
-logging.basicConfig(level=logging.INFO, format="%(message)s")
+#logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger('program')
 
 import threading
@@ -56,6 +56,7 @@ class TestDefaultChipId(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
         m3.ice_simulator.destroy_fake_serial()
 
     def test_goc_message_default(self):
@@ -75,8 +76,6 @@ class TestDefaultChipId(object):
         self.driver.goc_programmer.cmd_message()
 
                 
-        # I have no idea how this works.....
-
 
 class TestNonDefaultChipID(object):
 
@@ -112,7 +111,10 @@ class TestNonDefaultChipID(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
+
         m3.ice_simulator.destroy_fake_serial()
+
 
     def test_goc_message_default(self):
         logger.info("Testing Goc Message Feature w/default chip_id") 
@@ -166,8 +168,8 @@ class TestChipIDMaskProgram(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
         m3.ice_simulator.destroy_fake_serial()
-
 
     def test_goc_flash_default(self):
         logger.info("Testing Goc Message Feature w/default chip_id") 
@@ -231,7 +233,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s : %(message)s")
 
     import nose
-    result = nose.run( defaultTest=__name__)
+    result = nose.run( argv=['--processes=0'], defaultTest=__name__)
     
     if result == True:
         print 'TESTS PASSED'
