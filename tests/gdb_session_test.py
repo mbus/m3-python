@@ -66,6 +66,15 @@ class TestGdbFull(object):
                 os.remove(serial_port)
 
     def test_gdb_session(this):
+        def serv_thread(driver):
+            while True:
+                try: 
+                    driver.mbus_controller.cmd_gdb()
+                    break
+                except m3.m3_gdb.GdbRemote.PortTakenException as e:
+                    this.log.warn("using another port")
+                    this.port = int(driver.mbus_controller.m3_ice.args.port) + 1
+                    driver.mbus_controller.m3_ice.args.port = str(this.port)
 
         def cmd_noresp(sock, cmd):
             this.log.debug('TX: ' + cmd)
@@ -87,6 +96,7 @@ class TestGdbFull(object):
        
         serial_port=m3.ice_simulator._FAKE_SERIAL_CONNECTTO_ENDPOINT
         this.log.info('Using ' + str(serial_port))
+
         this.driver = m3.m3_ice.m3_ice(['--debug',
                                     '-s '+ serial_port,
                                     'mbus',
@@ -94,11 +104,12 @@ class TestGdbFull(object):
                                     '--port='+ str(this.port),
                                     ])
         # this time we launch a thread to run the ctrl interface
-        servTid= threading.Thread(target = this.driver.mbus_controller.cmd_gdb)
+        servTid= threading.Thread(target = serv_thread, \
+                                    args=(this.driver,))
         servTid.daemon = True
         servTid.start()
         
-        time.sleep(0.5) 
+        time.sleep(1.0)  # give time for port to settle
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect( ('localhost',this.port))

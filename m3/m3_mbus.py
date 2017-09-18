@@ -606,7 +606,6 @@ class mbus_controller( object):
 
             if cmd == 'cmd__quit_': 
                 logger.info('GDB CTRL Quiting')
-                ctrl.cmd_D()
                 break
             else : 
                 func = getattr(ctrl, cmd)
