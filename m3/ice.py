@@ -21,7 +21,7 @@ import time
 import os
 
 from . import m3_logging
-logger = m3_logging.getGlobalLogger()
+logger = m3_logging.getLogger(__name__)
 
 try:
     import threading
@@ -694,26 +694,36 @@ class ICE(object):
         '''
         # XXX: Make version dependent?
         FRAG_SIZE = 255
+        retry = True 
 
         sent = 0
-        logger.debug("Sending %d byte message (in %d byte fragments)" % (len(msg), FRAG_SIZE))
+        logger.debug("Sending %d byte message (in %d byte fragments)" % \
+                                                    (len(msg), FRAG_SIZE))
         while len(msg) >= FRAG_SIZE:
             ack,resp = self.send_message(msg_type, msg[0:FRAG_SIZE])
             if ack == 1: # (NAK)
-                if len(resp) == 0:
-                    logger.warning("ICE NAK'd request to send with no length sent field, assuming 0")
-                    return sent + 0
-                return sent + ord(resp)
+                if len(resp) == 0 and retry:
+                    logger.warning("ICE NAK'd request to send with no length "\
+                                    "sent field, assuming 0 and retrying")
+                    retry = False
+                else: return sent + ord(resp)
+            else: retry = True
+
             msg = msg[FRAG_SIZE:]
             sent += FRAG_SIZE
             logger.debug("\tSent %d byte s, %d remaining" % (sent, len(msg)))
-        logger.debug("Sending last message fragment, %d bytes long" % (len(msg)))
-        ack,resp = self.send_message(msg_type, msg)
-        if ack == 1:
-            if len(resp) == 0:
-                logger.warning("ICE NAK'd request to send with no length sent field, assuming 0")
-                return sent + 0
-            return sent + ord(resp)
+
+        logger.debug("Sending last message fragment, %d bytes long" % \
+                                                            (len(msg)))
+        while True:
+            ack,resp = self.send_message(msg_type, msg)
+            if ack == 1:
+                if len(resp) == 0 and retry:
+                    logger.warning("ICE NAK'd request to send with no length "\
+                                    "sent field, assuming 0 and retrying")
+                    retry = False
+                else: return sent + ord(resp)
+            else: break # no more while loop
         sent += len(msg)
         return sent
 
@@ -1277,6 +1287,7 @@ class ICE(object):
                     prefix = "{0:b}".format( int(prefix,16) )
                 except: 
                     raise self.FormatError("Malformed Prefix")
+                logger.debug("Prefix parsed as: " + str(prefix))
 
             if len(prefix) != 4:
                 raise self.FormatError("Prefix must be exactly 4 bits")
@@ -1789,6 +1800,8 @@ class ICE(object):
         '''
         if rail not in (ICE.POWER_0P6, ICE.POWER_1P2, ICE.POWER_VBATT, ICE.POWER_GOC):
             raise self.ParameterError("Invalid rail: " + str(rail))
+
+        raise Exception("This does not currently work on the ICE board")
 
         resp = self.send_message_until_acked('P', struct.pack("BB", ord('o'), rail))
         if len(resp) != 1:
