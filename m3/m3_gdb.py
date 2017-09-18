@@ -482,7 +482,7 @@ class GdbCtrl(object):
         # try to import PyMulator (used to fake single-stepping)
         from PyMulator.PyMulator import PyMulator
         this.mulator = PyMulator(this.rf, this.mem,debug=True)
-        if False: except:  
+        if False: #except:  
             this.log.warn('='*40 + '\n' + \
                          '\tPyMulator not found\n' +\
                          '\tSingle-stepping will not work!\n' + \
