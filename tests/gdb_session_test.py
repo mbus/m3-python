@@ -75,6 +75,8 @@ class TestGdbFull(object):
                     this.log.warn("using another port")
                     this.port = int(driver.mbus_controller.m3_ice.args.port) + 1
                     driver.mbus_controller.m3_ice.args.port = str(this.port)
+                except:
+                    raise
 
         def cmd_noresp(sock, cmd):
             this.log.debug('TX: ' + cmd)
@@ -508,6 +510,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$OK#9a')
 
         #need to add ice_terminate? 
+        servTid.join()
         
 
 # Now I have an idea how this works.....
