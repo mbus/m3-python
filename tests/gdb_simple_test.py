@@ -10,7 +10,7 @@ import time
 import binascii
 
 import logging
-logger = logging.getLogger('test_program')
+logger = logging.getLogger('program')
 
 import threading
 import subprocess

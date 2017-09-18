@@ -917,7 +917,6 @@ if __name__ == '__main__':
 
         if cmd == 'cmd__quit_': 
             print ('GDB CTRL Quiting')
-            ctrl.cmd_D()
             break
         else : 
             func = getattr(ctrl, cmd)
