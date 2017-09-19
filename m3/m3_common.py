@@ -708,9 +708,7 @@ class goc_programmer(object):
     def cmd_message(self):
         self.set_goc_led_type(self.m3_ice.args.led)
 
-        chip_id = int(self.m3_ice.args.chip_id,16)
-        chip_id_mask = int(self.m3_ice.args.chip_id_mask,16)
-        self._chip_id_sanity(chip_id, chip_id_mask)
+        chip_id, chip_id_mask = self._chip_id_parser(self.m3_ice.args)
 
         addr = self.m3_ice.args.ADDRESS
         addr = addr.replace('0x', '')
@@ -756,10 +754,9 @@ class goc_programmer(object):
     def cmd_flash(self):
         self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
         self.set_goc_led_type(self.m3_ice.args.led)
-        
-        chip_id = int(self.m3_ice.args.chip_id,16)
-        chip_id_mask = int(self.m3_ice.args.chip_id_mask,16)
-        self._chip_id_sanity(chip_id, chip_id_mask)
+       
+        chip_id, chip_id_mask = self._chip_id_parser( self.m3_ice.args)
+
 
         logger.info("")
         logger.info("Would you like to run after programming? If you do not")
@@ -832,15 +829,22 @@ class goc_programmer(object):
         #logger.info("Sending 0x88 0x00000000")
         #self.send(binascii.unhexlify("88"), binascii.unhexlify("00000000"))
 
-    def _chip_id_sanity(self, chip_id, chip_id_mask):
+
+    def _chip_id_parser(self, args):
+
+        chip_id = int(args.chip_id,16)
+        chip_id_mask = int(args.chip_id_mask,16)
+
         if( chip_id != goc_programmer.CHIP_ID_DEFAULT and \
                     chip_id_mask == goc_programmer.CHIP_ID_MASK_DEFAULT):
-            logger.warn("non-default chip_id set, but chip_id_mask will "\
-                        "mask it out.")
+            chip_id_mask = 0x0
+            logger.info("non-default chip_id set, setting chip_id_mask "\
+                         "to 0x0")
         elif (chip_id == goc_programmer.CHIP_ID_DEFAULT and \
                     chip_id_mask != goc_programmer.CHIP_ID_MASK_DEFAULT):
             logger.warn("default chip_id with non-default chip_id_mask")
-
+        
+        return [chip_id, chip_id_mask]
 
 class ein_programmer(object):
     TITLE = "EIN Programmer"
