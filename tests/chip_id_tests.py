@@ -51,6 +51,7 @@ class TestDefaultChipId(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
         m3.ice_simulator.destroy_fake_serial()
 
     def test_goc_message_default(self):
@@ -101,7 +102,10 @@ class TestNonDefaultChipID(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
+
         m3.ice_simulator.destroy_fake_serial()
+
 
     def test_goc_message_default(self):
         logger.info("Testing Goc Message Feature w/default chip_id") 
@@ -151,8 +155,8 @@ class TestChipIDMaskProgram(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
         m3.ice_simulator.destroy_fake_serial()
-
 
     def test_goc_flash_default(self):
         logger.info("Testing Goc Message Feature w/default chip_id") 
@@ -216,7 +220,9 @@ class TestChipIDMaskProgram(object):
 if __name__ == '__main__':
 
     import nose
-    result = nose.run( defaultTest=__name__)
+
+    # make sure only 1 tests runs at once
+    result = nose.run( argv=['--processes=0'], defaultTest=__name__)
     
     if result == True:
         print 'TESTS PASSED'

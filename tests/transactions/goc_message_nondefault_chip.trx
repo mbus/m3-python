@@ -31,3 +31,6 @@ WAIT 660b0f800001000081000000a0bbbbaaaa6a
 SEND 000b00
 WAIT 660c0180
 SEND 000c00
+
+#prevents serial from closing too soon
+SLEEP 2 
