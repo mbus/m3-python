@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 
+import binascii
 import datetime
 import os
 import sys
-import struct
 import socket
+import struct
+import subprocess
 import tempfile
 import time
-import binascii
+import threading
 
 import logging
-logging.basicConfig(level=logging.INFO, format="%(message)s")
-logger = logging.getLogger('program')
+logging.basicConfig(level=logging.INFO, \
+        format="%(levelname)s %(name)s : %(message)s")
+logger = logging.getLogger(__name__ )
 
-import threading
-import subprocess
-
-import inspect
 
 from m3.ice import ICE
 import m3.ice_simulator
@@ -26,10 +25,6 @@ class TestDefaultChipId(object):
     
     #magic nose stuff
     _multiprocess_shared_ = False
-
-    class TestFailedException(Exception):
-        logger.info('='*42 + '\nTEST FAILED\n' + '='*42)
-        pass
 
     @classmethod
     def setup_class(cls, ):
@@ -56,6 +51,7 @@ class TestDefaultChipId(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
         m3.ice_simulator.destroy_fake_serial()
 
     def test_goc_message_default(self):
@@ -75,17 +71,11 @@ class TestDefaultChipId(object):
         self.driver.goc_programmer.cmd_message()
 
                 
-        # I have no idea how this works.....
-
 
 class TestNonDefaultChipID(object):
 
     #magic nose stuff
     _multiprocess_shared_ = False
-
-    class TestFailedException(Exception):
-        logger.info('='*42 + '\nTEST FAILED\n' + '='*42)
-        pass
 
     @classmethod
     def setup_class(cls, ):
@@ -112,7 +102,10 @@ class TestNonDefaultChipID(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
+
         m3.ice_simulator.destroy_fake_serial()
+
 
     def test_goc_message_default(self):
         logger.info("Testing Goc Message Feature w/default chip_id") 
@@ -136,10 +129,6 @@ class TestChipIDMaskProgram(object):
 
     #magic nose stuff
     _multiprocess_shared_ = False
-
-    class TestFailedException(Exception):
-        logger.info('='*42 + '\nTEST FAILED\n' + '='*42)
-        pass
 
     @classmethod
     def setup_class(cls, ):
@@ -166,8 +155,8 @@ class TestChipIDMaskProgram(object):
 
     @classmethod
     def teardown_class(cls):
+        cls.sim_thread.join()
         m3.ice_simulator.destroy_fake_serial()
-
 
     def test_goc_flash_default(self):
         logger.info("Testing Goc Message Feature w/default chip_id") 
@@ -225,13 +214,15 @@ class TestChipIDMaskProgram(object):
         os.remove(tmp_path)
 
 
-
+#
+#
+#
 if __name__ == '__main__':
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s : %(message)s")
-
     import nose
-    result = nose.run( defaultTest=__name__)
+
+    # make sure only 1 tests runs at once
+    result = nose.run( argv=['--processes=0'], defaultTest=__name__)
     
     if result == True:
         print 'TESTS PASSED'
