@@ -633,6 +633,7 @@ class GdbCtrl(object):
             read_bytes = 4 if size_bytes >4 else size_bytes
             encode_str = this.encode_str[read_bytes]
             val = this.mem[(addr,read_bytes * 8)]
+            this.log.debug('mem read: ' + hex(addr) + ' ' + hex(val))
             val = struct.pack(encode_str, val).encode('hex')#lit endian
             resp += val
             addr += read_bytes

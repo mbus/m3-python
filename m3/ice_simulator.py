@@ -278,10 +278,16 @@ class Simulator(object):
                 data = binascii.unhexlify(hex_tex)
                
                 rxMsg = b''
-                while (rxMsg != data):
-                    rxMsg = read_raw_message()
-                    logger.debug('Read: ' + binascii.hexlify(rxMsg))
-                    logger.info('vs  : ' + binascii.hexlify(data))
+
+                rxMsg = read_raw_message()
+                logger.debug('Read: ' + binascii.hexlify(rxMsg))
+                logger.info(' vs  : ' + binascii.hexlify(data))
+                if (rxMsg != data): 
+                    rx = binascii.hexlify(rxMsg)
+                    buf = binascii.hexlify(data) 
+                    raise Exception('Read vs. Expect: ' + \
+                            str(rx) + ' vs. ' + str(buf)  + \
+                            ' ascii: ' + str(rx==buf))
                 logger.debug('Found match!') 
 
             elif line.startswith('SEND'):

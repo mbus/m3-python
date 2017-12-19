@@ -187,7 +187,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000020030000280000a06000000020030000e8030000ffffffffffffffff2a000000ffffffffffffffffffffffffffffffff6c1f00000b0400000e0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000081#cd')
 
         rx_resp = cmd( s, '$m10e,4#93')
-        assert(rx_resp == '$c0c0c0c0#4c')
+        assert(rx_resp == '$c0baefd0#b5')
 
         rx_resp = cmd( s, '$m108,2#64')
         assert(rx_resp == '$0023#c5')
@@ -222,7 +222,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$#00')
 
         rx_resp = cmd( s, '$m40a,4#92')
-        assert(rx_resp == '$01010101#84')
+        assert(rx_resp == '$01abcdfe#b6')
 
         rx_resp = cmd( s, '$m360,2#64')
         assert(rx_resp == '$30b5#fa')
@@ -252,7 +252,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000020030000280000a06400000020030000e8030000ffffffffffffffff2a000000ffffffffffffffffffffffffffffffff6c1f00000b0400000a0400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000061#ce')
 
         rx_resp = cmd( s, '$m40a,4#92')
-        assert(rx_resp == '$01010101#84')
+        assert(rx_resp == '$01cddffe#bd')
 
         rx_resp = cmd( s, '$m360,2#64')
         assert(rx_resp == '$30b5#fa')
@@ -326,7 +326,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000072030000280000a01b00000072030000e8030000ffffffffffffffff2a000000ffffffffffffffffffffffffffffffff6c1f00000b0400000a0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001#fc')
 
         rx_resp = cmd( s, '$m10a,4#8f')
-        assert(rx_resp == '$01010101#84')
+        assert(rx_resp == '$01df0023#f0') #$01010101#84')
 
         rx_resp = cmd( s, '$m108,2#64')
         assert(rx_resp == '$0023#c5')
@@ -344,10 +344,10 @@ class TestGdbFull(object):
         assert(rx_resp == '$fae7#63')
 
         rx_resp = cmd( s, '$mffffe7fa,4#c8')
-        assert(rx_resp == '$00000000#80')
+        assert(rx_resp == '$0000a81f#f0')
 
         rx_resp = cmd( s, '$m112,4#61')
-        assert(rx_resp == '$fafafafa#1c')
+        assert(rx_resp == '$fae70133#2a')
 
         rx_resp = cmd( s, '$m112,2#5f')
         assert(rx_resp == '$fae7#63')
@@ -362,7 +362,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000072030000280000a01b00000072030000e8030000ffffffffffffffff2a000000ffffffffffffffffffffffffffffffff6c1f00000b0400000a0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001#fc')
 
         rx_resp = cmd( s, '$m10a,4#8f')
-        assert(rx_resp == '$83838383#ac')
+        assert(rx_resp == '$83420023#96') #$83838383#ac')
 
         rx_resp = cmd( s, '$m108,2#64')
         assert(rx_resp == '$0023#c5')
@@ -374,7 +374,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000072030000280000a01b00000072030000e8030000ffffffffffffffff2a000000ffffffffffffffffffffffffffffffff6c1f00000b0400000a0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001#fc')
 
         rx_resp = cmd( s, '$m10a,4#8f')
-        assert(rx_resp == '$83838383#ac')
+        assert(rx_resp == '$83420023#96') #$83838383#ac')
 
         rx_resp = cmd( s, '$m108,2#64')
         assert(rx_resp == '$0023#c5')
@@ -386,7 +386,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000072030000280000a01b00000072030000e8030000ffffffffffffffff2a000000efbeaddeffffffffffffffffffffffff6c1f00000b0400000a0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001#ec')
 
         rx_resp = cmd( s, '$m10a,4#8f')
-        assert(rx_resp == '$83838383#ac')
+        assert(rx_resp == '$83420023#96') #$83838383#ac')
 
         rx_resp = cmd( s, '$m108,2#64')
         assert(rx_resp == '$0023#c5')
@@ -398,7 +398,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000072030000280000a01b00000072030000e8030000ffffffffffffffff2a000000cefaedfeffffffffffffffffffffffff6c1f00000b0400000a0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001#ef')
 
         rx_resp = cmd( s, '$m10a,4#8f')
-        assert(rx_resp == '$83838383#ac')
+        assert(rx_resp == '$83420023#96') #$83838383#ac')
 
         rx_resp = cmd( s, '$m108,2#64')
         assert(rx_resp == '$0023#c5')
@@ -470,7 +470,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$6400000072030000280000a06400000072030000e8030000ffffffffffffffff2a000000cefaedfeffffffffffffffffffffffff6c1f00000b0400000a0400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000061#cf')
 
         rx_resp = cmd( s, '$m40a,4#92')
-        assert(rx_resp == '$01010101#84')
+        assert(rx_resp == '$01347ffe#30') #$01010101#84')
 
         rx_resp = cmd( s, '$m360,2#64')
         assert(rx_resp == '$30b5#fa')
@@ -501,7 +501,7 @@ class TestGdbFull(object):
         assert(rx_resp == '$2c229c8d#31')
 
         rx_resp = cmd( s, '$mffffffff,4#fd')
-        assert(rx_resp == '$00000000#80')
+        assert(rx_resp == '$00a81f00#f0') #$00000000#80')
 
         rx_resp = cmd( s, '$qL1200000000000000000#50')
         assert(rx_resp == '$#00')
@@ -518,7 +518,7 @@ class TestGdbFull(object):
 # Now I have an idea how this works.....
 if __name__ == '__main__':
 
-    #logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(message)s")
+    #logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(name)s - %(message)s")
 
     import nose
     result = nose.run( defaultTest=__name__, )

@@ -239,11 +239,15 @@ class Memory(object):
             this.log.debug('MemRd: unaligned access')
             assert( size in [32,16] )
             val = 0
+            offset = 0
             while size > 0:
                 tval = this.mbus.read_mem(addr,8)
+                this.log.debug('MemRd: partial read: ' + hex(tval) )
                 assert(tval <= 0xff)
-                val = val << 8 | tval 
+                val = val | (tval << offset)
                 size -= 8
+                offset += 8
+                addr += 1
             return val
 
     #
