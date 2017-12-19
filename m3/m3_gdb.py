@@ -133,6 +133,7 @@ class GdbRemote(object):
 
                 except this.DisconnectException: 
                     # this is here to make testing easier, but isn't required
+                    this._gdbPut('k')
                     this._gdbPut('_quit_')
                     this.put('GDB_QUIT')
                     break
@@ -615,8 +616,9 @@ class GdbCtrl(object):
 
     def cmd_k(this):
         this.log.info("kill")
-        # just halt the PRC?  
-        this.prc.halt(None)
+        # just resume the PRC?  
+        if this.prc.isHalted():
+            this.prc.resume()
 
     def cmd_m(this, subcmd):
         assert(this.prc.isHalted()) 
