@@ -63,7 +63,8 @@ class GdbRemote(object):
         try:
             this.sock.bind( ('localhost', tcp_port) )
         except socket.error as msg:
-            this.log.error('Bind failed. Error Code : ' + \
+            this.log.error('Bind to port: ' + str(tcp_port) + \
+                            ' failed. Error Code : ' + \
                             str(msg[0]) + ' Message ' + msg[1] )
             raise this.PortTakenException()
 
