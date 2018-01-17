@@ -450,9 +450,24 @@ class mbus_controller( object):
         Programs the PRC over MBUS
         '''
 
-        self.m3_ice.dont_do_default("Run power-on sequence", 
+        try:
+            ice = self.m3_ice.ice
+            status = list( map( lambda x: ice.power_get_onoff(x), 
+                [ ice.POWER_0P6, ice.POWER_1P2, ice.POWER_VBATT ]))
+            status =  list( map( lambda x:  "On" if x==True else "Off", status)) 
+            status = ','.join(status)
+            print (" Current Voltages are: " + str(status))
+            
+            if status == 'On,On,On':
+                self.m3_ice.dont_do_default("Run power-on sequence", 
+                        self.m3_ice.power_on)
+                self.m3_ice.dont_do_default("Reset M3", self.m3_ice.reset_m3)
+            else: raise Exception()
+        except: 
+            self.m3_ice.do_default("Run power-on sequence", 
                     self.m3_ice.power_on)
-        self.m3_ice.dont_do_default("Reset M3", self.m3_ice.reset_m3)
+            self.m3_ice.do_default("Reset M3", self.m3_ice.reset_m3)
+
 
         logger.info("** Setting ICE MBus controller to slave mode")
         self.m3_ice.ice.mbus_set_master_onoff(False)
