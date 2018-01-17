@@ -295,45 +295,33 @@ class TestICE(object):
 
     def test_power_onoff(self):
         logger.info("Test po")
-        TestICE.ice.power_set_onoff(TestICE.ice.POWER_VBATT, True)
-        if TestICE.ice.power_get_onoff(TestICE.ice.POWER_VBATT) != True:
-            logger.error("Set/get mismatch VBATT power")
-        TestICE.ice.power_set_onoff(TestICE.ice.POWER_1P2, True)
-        if TestICE.ice.power_get_onoff(TestICE.ice.POWER_1P2) != True:
-            logger.error("Set/get mismatch 1.2 V power")
-        TestICE.ice.power_set_onoff(TestICE.ice.POWER_0P6, True)
-        if TestICE.ice.power_get_onoff(TestICE.ice.POWER_0P6) != True:
-            logger.error("Set/get mismatch 0.6 V power")
+        try:
+            TestICE.ice.power_set_onoff(TestICE.ice.POWER_VBATT, True)
+            if TestICE.ice.power_get_onoff(TestICE.ice.POWER_VBATT) != True:
+                logger.error("Set/get mismatch VBATT power")
+            TestICE.ice.power_set_onoff(TestICE.ice.POWER_1P2, True)
+            if TestICE.ice.power_get_onoff(TestICE.ice.POWER_1P2) != True:
+                logger.error("Set/get mismatch 1.2 V power")
+            TestICE.ice.power_set_onoff(TestICE.ice.POWER_0P6, True)
+            if TestICE.ice.power_get_onoff(TestICE.ice.POWER_0P6) != True:
+                logger.error("Set/get mismatch 0.6 V power")
+        except TestICE.ice.VersionError:
+            logger.warn("Skipping set/get onoff until V0.5")
+            pass
 
 
-
+# Now I have an idea how this works.....
 if __name__ == '__main__':
-    if len(sys.argv) not in (2,):
-        logger.info("USAGE: %s SERIAL_DEVICE\n" % (sys.argv[0]))
-        sys.exit(2)
 
-    i = ICETests(serial_port=sys.argv[1])
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s - %(message)s")
 
-    logger.info('')
-    logger.info('Begin running tests')
-    try:
-        logger.info('  Attached ICE supports: %s', i.ice.capabilities)
-    except AttributeError:
-        logger.info('  Attached ICE does not support querying capabilities')
-    logger.info('')
+    import nose
+    result = nose.run( defaultTest=__name__, )
 
-    all_functions = inspect.getmembers(i, inspect.ismethod)
-    for f in all_functions:
-        if f[0][0:5] == "test_":
-            try:
-                f[1](ice)
-            except ice.VersionError:
-                logger.info("%s skipped. Not supported in attached ICE version", f[0])
-            except ice.CapabilityError as e:
-                logger.info("%s skipped. Required capability %s is not supported",
-                        f[0], e.required_capability)
-        else:
-            logger.warn("Non-test method: " + f[0])
+    if result == True:
+        logger.info('TESTS PASSED')
+    else:
+        logger.info('TESTS FAILED')
 
     logger.info('')
     logger.info("All tests completed")
