@@ -69,7 +69,7 @@ def fn_to_source(fn):
 		return fn.__name__
 
 import inspect
-def trace(fn):
+def trace(logger, fn):
 	"""Decorator that logger.trace()'s function calls and their arguments"""
 	def inner(*args, **kwargs):
 		source = fn_to_source(fn)
