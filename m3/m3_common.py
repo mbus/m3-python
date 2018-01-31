@@ -436,19 +436,12 @@ class m3_common(object):
 
         #this needs to come before calls to logger.*
         #try to find debug flag
-        if (self.args.debug): 
+        if (self.args.debug):
             m3_logging.LoggerSetLevel('Debug')
             logger.debug('Found debug flag, setting logging=DEBUG ')
         else:
-            # or try to find ICE_DEBUG in env
-            try:
-                os.environ['ICE_DEBUG']
-                m3_logging.LoggerSetLevel('Debug')
-                logger.debug('found ICE_DEBUG in env, ' + 
-                                'setting logging=DEBUG ')
-            #otherwise default to logging level info                
-            except KeyError:
-                m3_logging.LoggerSetLevel('Info')
+            level = m3_logging.log_level_from_environment()
+            m3_logging.LoggerSetLevel(level)
 
         if self.args.serial == 'autodetect':
             self.serial_path = self.guess_serial()

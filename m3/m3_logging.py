@@ -133,12 +133,12 @@ class LoggerManager (object):
             this.f = DefaultFormatter()
         this.h.setFormatter(this.f)
 
-#def log_level_from_environment():
-#	try:
-#		os.environ['ICE_DEBUG']
-#		return logging.DEBUG
-#	except KeyError:
-#		return logging.INFO
+def log_level_from_environment():
+    try:
+        os.environ['ICE_DEBUG']
+        return logging.DEBUG
+    except KeyError:
+        return logging.INFO
 
 # logger manager
 logMan = LoggerManager() 
