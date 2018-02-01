@@ -113,35 +113,19 @@ class TestMbusWrite(object):
                 
         # I have no idea how this works.....
 
-
-
+# Now I have an idea how this works.....
 if __name__ == '__main__':
-    if len(sys.argv) not in (2,):
-        logger.info("USAGE: %s SERIAL_DEVICE\n" % (sys.argv[0]))
-        sys.exit(2)
+    logging.basicConfig(level=logging.DEBUG, format="%(levelname)s %(name)s - %(message)s")
 
-    i = ICETests(serial_port=sys.argv[1])
+    import nose
+    result = nose.run( defaultTest=__name__, )
 
-    logger.info('')
-    logger.info('Begin running tests')
-    try:
-        logger.info('  Attached ICE supports: %s', i.ice.capabilities)
-    except AttributeError:
-        logger.info('  Attached ICE does not support querying capabilities')
-    logger.info('')
+    if result == True:
+        print 'TESTS PASSED'
+    else:
+        print 'TESTS FAILED'
 
-    all_functions = inspect.getmembers(i, inspect.ismethod)
-    for f in all_functions:
-        if f[0][0:5] == "test_":
-            try:
-                f[1](ice)
-            except ice.VersionError:
-                logger.info("%s skipped. Not supported in attached ICE version", f[0])
-            except ice.CapabilityError as e:
-                logger.info("%s skipped. Required capability %s is not supported",
-                        f[0], e.required_capability)
-        else:
-            logger.warn("Non-test method: " + f[0])
 
     logger.info('')
     logger.info("All tests completed")
+
