@@ -729,12 +729,15 @@ class GdbCtrl(object):
         return 'S05'
 
     def cmd_v(this, subcmd):
-        this.log.info('v command')
-        assert(this.prc.isHalted() )
+        this.log.info('v command: ' + str(subcmd))
         if subcmd.startswith('Cont?'):
-            this.log.debug('vCont')
+            assert(this.prc.isHalted() )
             return "vCont;cs"
-        else: assert(False) 
+        elif subcmd.startswith('MustReplyEmpty'):
+            return ""
+        else: 
+            this.log.warn("Unrecognized v command")
+            return ""
 
     def cmd_z(this, subcmd):
         args = subcmd.split(',')

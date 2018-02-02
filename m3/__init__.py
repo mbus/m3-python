@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version__ = '0.6.9'
+__version__ = '0.6.12'
 
 __all__ = [
         "ice",

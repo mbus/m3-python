@@ -69,7 +69,7 @@ def fn_to_source(fn):
 		return fn.__name__
 
 import inspect
-def trace(fn):
+def trace(logger, fn):
 	"""Decorator that logger.trace()'s function calls and their arguments"""
 	def inner(*args, **kwargs):
 		source = fn_to_source(fn)
@@ -133,12 +133,12 @@ class LoggerManager (object):
             this.f = DefaultFormatter()
         this.h.setFormatter(this.f)
 
-#def log_level_from_environment():
-#	try:
-#		os.environ['ICE_DEBUG']
-#		return logging.DEBUG
-#	except KeyError:
-#		return logging.INFO
+def log_level_from_environment():
+    try:
+        os.environ['ICE_DEBUG']
+        return logging.DEBUG
+    except KeyError:
+        return logging.INFO
 
 # logger manager
 logMan = LoggerManager() 

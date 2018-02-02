@@ -81,6 +81,11 @@ class TestGdbSimple(object):
         s.close()
         
         rx_cmd, rx_subcmd, _ = this.gdb.get()
+        this.log.debug('RX_CMD: ' + str(rx_cmd) )
+        assert(rx_cmd == 'k')
+
+        rx_cmd, rx_subcmd, _ = this.gdb.get()
+        this.log.debug('RX_CMD: ' + str(rx_cmd) )
         assert(rx_cmd == '_quit_')
 
     def test_gdb_simple(this):

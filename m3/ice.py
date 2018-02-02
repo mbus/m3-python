@@ -48,7 +48,7 @@ except ImportError:
 ################################################################################
 
 class ICE(object):
-    VERSIONS = ((0,1),(0,2),(0,3),(0,4))
+    VERSIONS = ((0,1),(0,2),(0,3),(0,4),(0,5))
     ONEYEAR = 365 * 24 * 60 * 60
 
     class ICE_Error(Exception):
@@ -1790,7 +1790,8 @@ class ICE(object):
         vout = (0.537 + 0.0185 * raw) * default_voltage
         return vout
 
-    @min_proto_version("0.1")
+    # didn't actually work until v0.5
+    @min_proto_version("0.5")
     @capability('P')
     def power_get_onoff(self, rail):
         '''
@@ -1800,8 +1801,6 @@ class ICE(object):
         '''
         if rail not in (ICE.POWER_0P6, ICE.POWER_1P2, ICE.POWER_VBATT, ICE.POWER_GOC):
             raise self.ParameterError("Invalid rail: " + str(rail))
-
-        raise Exception("This does not currently work on the ICE board")
 
         resp = self.send_message_until_acked('P', struct.pack("BB", ord('o'), rail))
         if len(resp) != 1:
