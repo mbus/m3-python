@@ -12,6 +12,7 @@ import atexit
 import binascii
 import csv
 import inspect
+import math
 import os
 import queue as Queue
 import socket
@@ -120,7 +121,7 @@ class m3_common(object):
             # GOC Version
             goc_version=0,              # Illegal version by default
             ):
-        if goc_version not in (1,2,3):
+        if goc_version not in (1,2,3,4):
             raise NotImplementedError("Bad GOC Version?")
 
 
@@ -128,7 +129,7 @@ class m3_common(object):
             assert(False) # are we ever passing in None still?
             if goc_version == 1:
                 chip_id_mask = 0
-            elif goc_version in (2,3):
+            elif goc_version in (2,3,4):
                 chip_id_mask = 0xF
 
 
@@ -152,7 +153,7 @@ class m3_common(object):
         # Program Lengh
         if hexencoded_data is not None:
             length = len(hexencoded_data) >> 3   # hex exapnded -> bytes, /2
-            if goc_version in (2,3):
+            if goc_version in (2,3,4):
                 length -= 1
                 assert length >= 0
             length = socket.htons(length)
@@ -166,13 +167,13 @@ class m3_common(object):
             byte = int(byte, 16)
             if goc_version in (1,2):
                 header_parity ^= byte
-            elif goc_version == 3:
+            elif goc_version in (3,4):
                 header_parity = (header_parity + byte) & 0xFF
         HEADER += "%02X" % (header_parity)
 
         DATA = ''
         if hexencoded_data is not None:
-            if goc_version in (2,3):
+            if goc_version in (2,3,4):
                 DATA += "%08X" % (memory_address)
 
             DATA += hexencoded_data
@@ -183,7 +184,7 @@ class m3_common(object):
                 b = int(byte, 16)
                 if goc_version in (1,2):
                     data_parity ^= b
-                elif goc_version == 3:
+                elif goc_version in (3,4):
                     data_parity = (data_parity + b) & 0xFF
 
             if goc_version == 1:
@@ -206,6 +207,10 @@ class m3_common(object):
         return m3_common._build_injection_message(goc_version=3, **kwargs)
 
     @staticmethod
+    def build_injection_message_for_goc_v4(**kwargs):
+        return m3_common._build_injection_message(goc_version=4, **kwargs)
+
+    @staticmethod
     def build_injection_message_interrupt_for_goc_v1(hexencoded, run_after=True):
         return m3_common.build_injection_message(
                 hexencoded_data=hexencoded,
@@ -224,6 +229,14 @@ class m3_common(object):
     @staticmethod
     def build_injection_message_interrupt_for_goc_v3(hexencoded, run_after=True):
         return m3_common.build_injection_message_for_goc_v3(
+                hexencoded_data=hexencoded,
+                run_after=run_after,
+                memory_address=0x1E00,
+                )
+
+    @staticmethod
+    def build_injection_message_interrupt_for_goc_v4(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v4(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1E00,
@@ -461,6 +474,9 @@ class m3_common(object):
             elif self.args.goc_version == 3:
                 self.build_injection_message = self.build_injection_message_for_goc_v3
                 self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v3
+            elif self.args.goc_version == 4:
+                self.build_injection_message = self.build_injection_message_for_goc_v4
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v4
             else:
                 raise NotImplementedError("Bad GOC version?")
 
@@ -590,9 +606,12 @@ class m3_common(object):
 class goc_programmer(object):
     TITLE = "GOC Programmer"
     #SLOW_FREQ_IN_HZ = 0.625
-    SLOW_FREQ_IN_HZ =15 
+    SLOW_FREQ_IN_HZ = 15
+    FASTMODE_FREQ_IN_HZ = 1024
     CHIP_ID_DEFAULT=0x0
     CHIP_ID_MASK_DEFAULT=0xF
+    BASEMODE_TRAINING_PULSES=8
+    FASTMODE_TRAINING_PULSES=500
 
 
     def __init__(self, m3_ice, parser):
@@ -602,9 +621,29 @@ class goc_programmer(object):
 
     def add_parse_args(self, parser):
         parser.add_argument('-g', '--goc-speed',
-                help="GOC Slow Speed in Hz. The fast speed will be 8x faster."\
+                help="GOC Slow Speed in Hz."\
+                        " For GOC v1-v3, the fast speed will be 8x faster."\
+                        " For GOC v4, this controls just the base mode frequency, use --fastmode-speed as well."\
                         " Defaults to " + str(goc_programmer.SLOW_FREQ_IN_HZ) + " Hz.",
                         default=goc_programmer.SLOW_FREQ_IN_HZ, type=float)
+
+        parser.add_argument('-f', '--fastmode-speed',
+                help="GOC Fastmode Speed in Hz."\
+                        " Only used in GOC v4."\
+                        " Defaults to " + str(goc_programmer.FASTMODE_FREQ_IN_HZ) + " Hz.",
+                        default=goc_programmer.FASTMODE_FREQ_IN_HZ, type=float)
+
+        parser.add_argument('--basemode-training-pulses',
+                help="Only used in GOC v4."\
+                        " Will be rounded to the next highest multiple of 4."\
+                        " Defaults to " + str(goc_programmer.BASEMODE_TRAINING_PULSES) + ".",
+                        default=goc_programmer.BASEMODE_TRAINING_PULSES, type=int)
+
+        parser.add_argument('--fastmode-training-pulses',
+                help="Only used in GOC v4."\
+                        " Will be rounded to the next highest multiple of 4."\
+                        " Defaults to " + str(goc_programmer.FASTMODE_TRAINING_PULSES) + ".",
+                        default=goc_programmer.FASTMODE_TRAINING_PULSES, type=int)
 
         parser.add_argument('-V', '--goc-version',
                 help="GOC protocol version. Defaults to 3",
@@ -693,10 +732,17 @@ class goc_programmer(object):
 
         self.set_slow_frequency()
         self.wake_chip()
-        if self.m3_ice.args.delay:
-            logger.info("Delaying {}s after passcode".format(self.m3_ice.args.delay))
-            printing_sleep(self.m3_ice.args.delay)
         self.set_fast_frequency()
+        if self.m3_ice.args.delay:
+            if self.m3_ice.args.goc_version in (4,):
+                logger.info("[skipping delay] GOC v4 does not allow delay between passcode and message")
+            else:
+                logger.info("Delaying {}s after passcode".format(self.m3_ice.args.delay))
+                printing_sleep(self.m3_ice.args.delay)
+        if self.m3_ice.args.goc_version in (4,):
+            logger.info("Sending fastmode training pulses")
+            pulses = 'f' * int(math.ceil(self.m3_ice.args.fastmode_training_pulses / 4))
+            self._goc_send(pulses)
 
     def cmd_message(self):
         self.set_goc_led_type(self.m3_ice.args.led)
@@ -792,27 +838,67 @@ class goc_programmer(object):
     def set_slow_frequency(self):
         self.m3_ice.ice.goc_set_frequency(self.m3_ice.args.goc_speed)
 
+    def _goc_send(self, string):
+        '''Internal helper to encode messages before sending to ICE. Expects hex strings.'''
+        if self.m3_ice.args.goc_version in (1,2,3):
+            self.m3_ice.ice.goc_send(binascii.unhexlify(string))
+        elif self.m3_ice.args.goc_version in (4,):
+            # I can't believe there isn't a library that just does this? :shrug:
+            man_lookup = {
+                    '0': 'aa', # 0000 -> 10 10 10 10
+                    '1': 'a9', # 0001 -> 10 10 10 01
+                    '2': 'a6', # 0010 -> 10 10 01 10
+                    '3': 'a5', # 0011 -> 10 10 01 01
+                    '4': '9a', # 0100 -> 10 01 10 10
+                    '5': '99', # 0101 -> 10 01 10 01
+                    '6': '96', # 0110 -> 10 01 01 10
+                    '7': '95', # 0111 -> 10 01 01 01
+                    '8': '6a', # 1000 -> 01 10 10 10
+                    '9': '69', # 1001 -> 01 10 10 01
+                    'a': '66', # 1010 -> 01 10 01 10
+                    'b': '65', # 1011 -> 01 10 01 01
+                    'c': '5a', # 1100 -> 01 01 10 10
+                    'd': '59', # 1101 -> 01 01 10 01
+                    'e': '56', # 1110 -> 01 01 01 10
+                    'f': '55', # 1111 -> 01 01 01 01
+                    }
+            to_send = ''
+            for c in string:
+                to_send += man_lookup[c.lower()]
+            self.m3_ice.ice.goc_send(binascii.unhexlify(to_send))
+        else:
+            raise NotImplementedError('bad goc version')
+
     def wake_chip(self):
-        passcode_string = "7394"
-#        passcode_string = "3935"   # Reset request
+        if self.m3_ice.args.goc_version in (1,2,3):
+            passcode_string = "7394"
+#           passcode_string = "3935"   # Reset request
+        elif self.m3_ice.args.goc_version in (4,):
+            prefix = 'f' * int(math.ceil(self.m3_ice.args.basemode_training_pulses / 4))
+            passcode_string = prefix + "4572"
         logger.info("Sending passcode to GOC")
         logger.debug("Sending:" + passcode_string)
-        self.m3_ice.ice.goc_send(binascii.unhexlify(passcode_string))
+        self._goc_send(passcode_string)
         printing_sleep(0.5)
 
     def set_fast_frequency(self):
-        self.m3_ice.ice.goc_set_frequency(8*self.m3_ice.args.goc_speed)
+        if self.m3_ice.args.goc_version in (1,2,3):
+            self.m3_ice.ice.goc_set_frequency(8*self.m3_ice.args.goc_speed)
+        elif self.m3_ice.args.goc_version in (4,):
+            self.m3_ice.ice.goc_set_frequency(self.m3_ice.args.fastmode_speed)
+        else:
+            raise NotImplementedError('Bad goc version')
 
     def send_goc_message(self, message):
         logger.info("Sending GOC message")
         logger.debug("Sending: " + message)
-        self.m3_ice.ice.goc_send(binascii.unhexlify(message))
+        self._goc_send(message)
         printing_sleep(0.5)
 
         logger.info("Sending extra blink to end transaction")
         extra = "80"
         logger.debug("Sending: " + extra)
-        self.m3_ice.ice.goc_send(binascii.unhexlify(extra))
+        self._goc_send(extra)
 
     def validate_bin(self):
         raise NotImplementedError("If you need this, let me know")
