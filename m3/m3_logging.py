@@ -98,7 +98,7 @@ class LoggerManager (object):
         this.h.level = logging.INFO
         this.h.addFilter(NoTraceFilter())
 
-        this.debugFormat = "%(levelname)s\t%(name)s\t%(message)s"
+        this.debugFormat = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
 
     def getLogger(this, name):
         l = logging.getLogger(name)
