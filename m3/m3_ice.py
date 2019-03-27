@@ -8,6 +8,9 @@ from builtins import (
         )
 
 import time
+import os
+
+from . import __version__
 
 from .m3_common import m3_common
 from .m3_common import mbus_snooper
@@ -127,6 +130,11 @@ class m3_ice(m3_common):
 
 
 def cmd():
+    try:
+        os.environ['ICE_DEBUG']
+        print('M3 Library Version:', __version__)
+    except KeyError:
+        pass
     m = m3_ice()
     m.args.func()
 
