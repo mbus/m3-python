@@ -879,7 +879,6 @@ class goc_programmer(object):
         logger.info("Sending passcode to GOC")
         logger.debug("Sending:" + passcode_string)
         self._goc_send(passcode_string)
-        printing_sleep(0.5)
 
     def set_fast_frequency(self):
         if self.m3_ice.args.goc_version in (1,2,3):
