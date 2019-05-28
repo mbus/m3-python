@@ -843,29 +843,7 @@ class goc_programmer(object):
         if self.m3_ice.args.goc_version in (1,2,3):
             self.m3_ice.ice.goc_send(binascii.unhexlify(string))
         elif self.m3_ice.args.goc_version in (4,):
-            # I can't believe there isn't a library that just does this? :shrug:
-            man_lookup = {
-                    '0': 'aa', # 0000 -> 10 10 10 10
-                    '1': 'a9', # 0001 -> 10 10 10 01
-                    '2': 'a6', # 0010 -> 10 10 01 10
-                    '3': 'a5', # 0011 -> 10 10 01 01
-                    '4': '9a', # 0100 -> 10 01 10 10
-                    '5': '99', # 0101 -> 10 01 10 01
-                    '6': '96', # 0110 -> 10 01 01 10
-                    '7': '95', # 0111 -> 10 01 01 01
-                    '8': '6a', # 1000 -> 01 10 10 10
-                    '9': '69', # 1001 -> 01 10 10 01
-                    'a': '66', # 1010 -> 01 10 01 10
-                    'b': '65', # 1011 -> 01 10 01 01
-                    'c': '5a', # 1100 -> 01 01 10 10
-                    'd': '59', # 1101 -> 01 01 10 01
-                    'e': '56', # 1110 -> 01 01 01 10
-                    'f': '55', # 1111 -> 01 01 01 01
-                    }
-            to_send = ''
-            for c in string:
-                to_send += man_lookup[c.lower()]
-            self.m3_ice.ice.goc_send(binascii.unhexlify(to_send))
+            self.m3_ice.ice.goc_send(binascii.unhexlify(string), encoding='manchester')
         else:
             raise NotImplementedError('bad goc version')
 
@@ -875,6 +853,9 @@ class goc_programmer(object):
 #           passcode_string = "3935"   # Reset request
         elif self.m3_ice.args.goc_version in (4,):
             prefix = 'f' * int(math.ceil(self.m3_ice.args.basemode_training_pulses / 4))
+            # Computer/ICE bridge cannot allow nibbles
+            if len(prefix) % 2:
+                prefix += 'f'
             passcode_string = prefix + "4572"
         logger.info("Sending passcode to GOC")
         logger.debug("Sending:" + passcode_string)

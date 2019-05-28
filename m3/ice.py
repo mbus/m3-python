@@ -947,7 +947,7 @@ class ICE(object):
 
     @min_proto_version("0.1")
     @capability('f')
-    def goc_send(self, msg, show_progress=True):
+    def goc_send(self, msg, show_progress=True, encoding='PWM'):
         '''
         Blinks a message via GOC.
 
@@ -962,16 +962,21 @@ class ICE(object):
         if not self.get_goc_enabled():
             self.set_goc_ein(goc=1)
 
+        encoding_to_msg_type = {
+                'PWM': 'f',
+                'manchester': 'n',
+                }
+
         if show_progress:
             e = threading.Event()
             t = threading.Thread(target=self._goc_display_delay, args=(msg,e))
             t.daemon = True
             t.start()
-            ret = self._fragment_sender('f', msg)
+            ret = self._fragment_sender(encoding_to_msg_type[encoding], msg)
             e.set()
             t.join()
         else:
-            ret = self._fragment_sender('f', msg)
+            ret = self._fragment_sender(encoding_to_msg_type[encoding], msg)
         return ret
 
     @min_proto_version("0.1")

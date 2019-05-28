@@ -7,7 +7,7 @@ from builtins import (
         next, object, oct, open, pow, range, round, str, super, zip,
         )
 
-CAPABILITES = "?_dIifOoBbMmeGgPp"
+CAPABILITES = "?_dIifnOoBbMmeGgPp"
 MAX_GPIO = 24
 DEFAULT_BAUD_DIVIDER = 0x00AE
 DEFAULT_I2C_MASK = '1001100x'
@@ -453,14 +453,14 @@ class Simulator(object):
                     else:
                         logger.debug("Got EIN fragment")
                     self.ack()
-                elif msg_type == 'f':
+                elif msg_type in ('f', 'n'):
                     self.flow_msg += msg
                     if len(msg) != 255:
-                        logger.info("Got f-type message in %s mode:", ('EIN','GOC')[ein_goc_toggle])
+                        logger.info("Got f/n-type message in %s mode:", ('EIN','GOC')[ein_goc_toggle])
                         logger.info("  message: " + binascii.hexlify(self.flow_msg))
                         self.flow_msg = bytes()
                     else:
-                        logger.debug("Got f-type fragment in %s mode", ('EIN','GOC')[ein_goc_toggle])
+                        logger.debug("Got f/n-type fragment in %s mode", ('EIN','GOC')[ein_goc_toggle])
                     if ein_goc_toggle:
                         t = (len(msg)*8) / self.flow_clock_in_hz
                         logger.info("Sleeping for {} seconds to mimic GOC".format(t))
