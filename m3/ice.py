@@ -103,7 +103,10 @@ class ICE(object):
         def __init__(self, required_capability, capabilities):
             self.required_capability = required_capability
             self.capabilities = capabilities
-            super(ICE.CapabilityError, self).__init__()
+            super(ICE.CapabilityError, self).__init__(
+                    "Missing required capability `{}`. Available capabilities are `{}`".\
+                    format(required_capability, capabilities)
+                    )
 
     class TimeoutError(ICE_Error):
         ''' 
