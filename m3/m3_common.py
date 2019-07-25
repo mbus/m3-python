@@ -740,9 +740,9 @@ class goc_programmer(object):
                 logger.info("Delaying {}s after passcode".format(self.m3_ice.args.delay))
                 printing_sleep(self.m3_ice.args.delay)
         if self.m3_ice.args.goc_version in (4,):
-            logger.info("Sending fastmode training pulses")
+            logger.info("Buffering fastmode training pulses")
             pulses = 'f' * int(math.ceil(self.m3_ice.args.fastmode_training_pulses / 4))
-            self._goc_send(pulses)
+            self._goc_send(pulses, buffer_message=True)
 
     def cmd_message(self):
         self.set_goc_led_type(self.m3_ice.args.led)
@@ -838,11 +838,20 @@ class goc_programmer(object):
     def set_slow_frequency(self):
         self.m3_ice.ice.goc_set_frequency(self.m3_ice.args.goc_speed)
 
-    def _goc_send(self, string):
+    def _goc_send(self, string, buffer_message=False):
         '''Internal helper to encode messages before sending to ICE. Expects hex strings.'''
         if self.m3_ice.args.goc_version in (1,2,3):
             self.m3_ice.ice.goc_send(binascii.unhexlify(string))
         elif self.m3_ice.args.goc_version in (4,):
+            if buffer_message:
+                if not hasattr(self, '_goc_v4_buffer'):
+                    self._goc_v4_buffer = ''
+                self._goc_v4_buffer += string
+                return
+            else:
+                if hasattr(self, '_goc_v4_buffer'):
+                    string = self._goc_v4_buffer + string
+                    self._goc_v4_buffer = ''
             self.m3_ice.ice.goc_send(binascii.unhexlify(string), encoding='manchester')
         else:
             raise NotImplementedError('bad goc version')
