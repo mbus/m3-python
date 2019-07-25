@@ -856,7 +856,7 @@ class goc_programmer(object):
             # Computer/ICE bridge cannot allow nibbles
             if len(prefix) % 2:
                 prefix += 'f'
-            passcode_string = prefix + "4572"
+            passcode_string = prefix + "2745"
         logger.info("Sending passcode to GOC")
         logger.debug("Sending:" + passcode_string)
         self._goc_send(passcode_string)
