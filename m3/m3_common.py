@@ -355,7 +355,7 @@ class m3_common(object):
                 self.install_handler()
             except AttributeError:
                 pass
-            
+
             if (self.args.baudrate == 'autodetect'):
                 self.args.baudrate = self.ice.find_baud(self.serial_path)
 
@@ -380,7 +380,7 @@ class m3_common(object):
         # Fix an ICE issue where the power rails must be poked for
         # the GOC circuitry to wake up
         self.ice.goc_set_onoff(False)
-        
+
         try:
             self.ice.power_set_onoff(self.ice.POWER_GOC, True)
         except self.ice.CapabilityError: 
@@ -402,8 +402,6 @@ class m3_common(object):
     def _create_parent_parser(self):
         # This parser object supplies common options to all subparsers
         self.parent_parser = argparse.ArgumentParser(add_help=False)
-
-        
 
 
     def add_parse_args(self):
@@ -718,12 +716,12 @@ class goc_programmer(object):
 
     def _generic_startup(self):
 
-        try: 
+        try:
             self.m3_ice.dont_do_default("Run power-on sequence", self.m3_ice.power_on)
             self.m3_ice.dont_do_default("Reset M3", self.m3_ice.reset_m3)
         except self.m3_ice.ice.CapabilityError:
             logger.warn("Power commands not supported")
-        
+
         try:
             self.m3_ice.ice.mbus_set_master_onoff(False)
             logger.info("** Setting ICE MBus controller to slave mode")
@@ -793,7 +791,7 @@ class goc_programmer(object):
     def cmd_flash(self):
         self.m3_ice.read_binfile(self.m3_ice.args.BINFILE)
         self.set_goc_led_type(self.m3_ice.args.led)
-       
+
         chip_id, chip_id_mask = self._chip_id_parser( self.m3_ice.args)
 
 
@@ -911,7 +909,7 @@ class goc_programmer(object):
         elif (chip_id == goc_programmer.CHIP_ID_DEFAULT and \
                     chip_id_mask != goc_programmer.CHIP_ID_MASK_DEFAULT):
             logger.warn("default chip_id with non-default chip_id_mask")
-        
+
         return [chip_id, chip_id_mask]
 
 class ein_programmer(object):
@@ -1089,7 +1087,7 @@ class mbus_programmer( object):
         litE= '<' + str(int(len(datafile)/4)) + 'I' 
         # unpack little endian, repack big endian
         datafile = struct.pack(bigE, * struct.unpack(litE, datafile))
- 
+
         # split file into chunks, pair each chunk with an address, 
         # then write each addr,chunk over mbus
         logger.debug ( 'splitting binfile into ' + str(chunk_size_bytes) 
@@ -1120,19 +1118,18 @@ class mbus_programmer( object):
         #logger.debug("sending read req... ")
         #self.m3_ice.ice.mbus_send(mbus_addr, read_req + dma_addr)
         #time.sleep(0.1)
-        
+
         # see above, just using RUN_CPU MBUS register again
         clear_data= struct.pack(">I", 0x10000001)  # 1 clears reset
         logger.debug("clearing RESET signal... ")
         self.m3_ice.ice.mbus_send(mbus_regwr, clear_data)
- 
 
         logger.info("")
         logger.info("Programming complete.")
         logger.info("")
 
-        return 
-    
+        return
+
 
     def split_transmission( self, payload, chunk_size = 255):
         return [ payload[i:i+chunk_size] for i in \
@@ -1258,6 +1255,4 @@ class mbus_snooper(object):
         self.ice.B_formatter_control_bits = True
         self.ice.msg_handler['B++'] = self._callback
         self.ice.msg_handler['b++'] = self._callback
-
-
 
