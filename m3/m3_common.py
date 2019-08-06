@@ -738,8 +738,13 @@ class goc_programmer(object):
                 logger.info("Delaying {}s after passcode".format(self.m3_ice.args.delay))
                 printing_sleep(self.m3_ice.args.delay)
         if self.m3_ice.args.goc_version in (4,):
-            logger.info("Buffering fastmode training pulses")
+            logger.info("Buffering fastmode training pulses + passcode")
             pulses = 'f' * int(math.ceil(self.m3_ice.args.fastmode_training_pulses / 4))
+            # Computer/ICE bridge cannot allow nibbles
+            if len(pulses) % 2:
+                pulses += 'f'
+            # Also need to send the passcode again in fastmode for v4
+            pulses += "7254"
             self._goc_send(pulses, buffer_message=True)
 
     def cmd_message(self):
