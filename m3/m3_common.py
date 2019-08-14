@@ -887,10 +887,11 @@ class goc_programmer(object):
         self._goc_send(message)
         printing_sleep(0.5)
 
-        logger.info("Sending extra blink to end transaction")
-        extra = "80"
-        logger.debug("Sending: " + extra)
-        self._goc_send(extra)
+        if self.m3_ice.args.goc_version in (1,2,3):
+            logger.info("Sending extra blink to end transaction")
+            extra = "80"
+            logger.debug("Sending: " + extra)
+            self._goc_send(extra)
 
     def validate_bin(self):
         raise NotImplementedError("If you need this, let me know")
