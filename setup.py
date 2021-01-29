@@ -3,7 +3,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-from m3 import __version__
+from m3.package import __version__
 
 config = {
         'name': 'm3',

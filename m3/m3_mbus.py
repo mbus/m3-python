@@ -40,10 +40,10 @@ import struct
 # if Py2K:
 import imp
 
-from . import __version__ 
+from package import __version__ 
 
 
-from . import m3_logging
+import m3_logging
 logger = m3_logging.getLogger(__name__)
  
 class MBusInterface(object):

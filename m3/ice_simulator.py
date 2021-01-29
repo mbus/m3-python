@@ -45,10 +45,10 @@ import threading
 import traceback
 
 
-from . import m3_logging
+import m3_logging
 logger = m3_logging.get_logger(__name__)
 
-from .ice import ICE
+from ice import ICE
 
 class UnknownCommandException(Exception):
     pass

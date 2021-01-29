@@ -10,16 +10,16 @@ from builtins import (
 import time
 import os
 
-from . import __version__
+from package import __version__
 
-from .m3_common import m3_common
-from .m3_common import mbus_snooper
-from .m3_common import ein_programmer
-from .m3_common import goc_programmer
+from m3_common import m3_common
+from m3_common import mbus_snooper
+from m3_common import ein_programmer
+from m3_common import goc_programmer
 
-from .m3_mbus import mbus_controller 
+from m3_mbus import mbus_controller 
 
-from . import m3_logging
+import m3_logging
 logger = m3_logging.getLogger(__name__)
 
 class m3_ice(m3_common):
