@@ -44,11 +44,15 @@ import time
 import threading
 import traceback
 
+try:
+    import m3_logging
+    from ice import ICE
+except:
+    from . import m3_logging
+    from .ice import ICE
 
-import m3_logging
 logger = m3_logging.get_logger(__name__)
 
-from ice import ICE
 
 class UnknownCommandException(Exception):
     pass

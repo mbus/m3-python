@@ -26,13 +26,18 @@ import threading
 # if Py2K:
 import imp
 
-from package import __version__ 
+try:
+    from __init__ import __version__ 
+    import m3_logging
+    from ice import ICE
+    from ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
+except:
+    from . import __version__ 
+    from . import m3_logging
+    from .ice import ICE
+    from .ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
 
-import m3_logging
 logger = m3_logging.getLogger(__name__)
-
-from ice import ICE
-from ice_simulator import _FAKE_SERIAL_CONNECTTO_ENDPOINT
 
 # Do this after ICE since ICE prints a nice help if pyserial is missing
 import serial.tools.list_ports

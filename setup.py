@@ -3,7 +3,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-from m3.package import __version__
+from m3 import __version__
 
 config = {
         'name': 'm3',
@@ -33,12 +33,13 @@ injector, and snooper are included with this package.''',
             "Natural Language :: English",
             "Operating System :: OS Independent",
             "Programming Language :: Python",
-            "Programming Language :: Python :: 2",
-            "Programming Language :: Python :: 2.7",
+            #"Programming Language :: Python :: 2",
+            #"Programming Language :: Python :: 2.7",
             #"Programming Language :: Python :: 3",
             #"Programming Language :: Python :: 3.3",
             #"Programming Language :: Python :: 3.4",
             #"Programming Language :: Python :: 3.5",
+            "Programming Language :: Python :: 3.9",
             #"Programming Language :: Python :: Implementation :: CPython",
             #"Programming Language :: Python :: Implementation :: PyPy",
             "Topic :: Software Development :: Embedded Systems",

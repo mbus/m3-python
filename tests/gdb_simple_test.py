@@ -65,8 +65,8 @@ class TestGdbSimple(object):
         tx_cmd ='$qSupported:multiprocess+;swbreak+;hwbreak+;qRelocInsn+#c9' 
         s.send(tx_cmd)
         rx_cmd, rx_subcmd, _ = this.gdb.get()
-        print rx_cmd
-        print rx_subcmd
+        print (rx_cmd)
+        print (rx_subcmd)
         rx_cmd += rx_subcmd[0]
         assert( rx_cmd ==  tx_cmd[1:-3])
         
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     result = nose.run( defaultTest=__name__, )
 
     if result == True:
-        print 'TESTS PASSED'
+        print ('TESTS PASSED')
     else:
-        print 'TESTS FAILED'
+        print ('TESTS FAILED')
 

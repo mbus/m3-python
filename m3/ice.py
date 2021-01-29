@@ -20,7 +20,10 @@ import sys
 import time
 import os
 
-import m3_logging
+try:
+    from . import m3_logging
+except:
+    import m3_logging
 logger = m3_logging.getLogger(__name__)
 
 try:
