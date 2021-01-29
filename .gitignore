@@ -90,3 +90,6 @@ ENV/
 
 #ignore google drive icon files
 Icon?
+
+#vim swap files
+*.swp
