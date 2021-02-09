@@ -125,8 +125,11 @@ class m3_common(object):
 
             # GOC Version
             goc_version=0,              # Illegal version by default
+
+            # Password
+            password=0,
             ):
-        if goc_version not in (1,2,3,4):
+        if goc_version not in (1,2,3,4,5):
             raise NotImplementedError("Bad GOC Version?")
 
 
@@ -134,11 +137,23 @@ class m3_common(object):
             assert(False) # are we ever passing in None still?
             if goc_version == 1:
                 chip_id_mask = 0
-            elif goc_version in (2,3,4):
+            elif goc_version in (2,3,4,5):
                 chip_id_mask = 0xF
 
 
         HEADER = ''
+
+        if goc_version == 5:
+            #Password 24bits
+            #password_byte10 = 0x00
+            #password_byte32 = 0x00
+            #password_byte54 = 0x00
+            password_byte10 =  password & 0xFF
+            password_byte32 = (password >> 8) & 0xFF
+            password_byte54 = (password >> 16) & 0xFF
+            HEADER += "%02X" % (password_byte10)
+            HEADER += "%02X" % (password_byte32)
+            HEADER += "%02X" % (password_byte54)
 
         # Control Byte
         control = chip_id_mask |\
@@ -155,10 +170,10 @@ class m3_common(object):
         if goc_version == 1:
             HEADER += "%04X" % (memory_address)
 
-        # Program Lengh
+        # Program Length
         if hexencoded_data is not None:
             length = len(hexencoded_data) >> 3   # hex exapnded -> bytes, /2
-            if goc_version in (2,3,4):
+            if goc_version in (2,3,4,5):
                 length -= 1
                 assert length >= 0
             length = socket.htons(length)
@@ -172,13 +187,13 @@ class m3_common(object):
             byte = int(byte, 16)
             if goc_version in (1,2):
                 header_parity ^= byte
-            elif goc_version in (3,4):
+            elif goc_version in (3,4,5):
                 header_parity = (header_parity + byte) & 0xFF
         HEADER += "%02X" % (header_parity)
 
         DATA = ''
         if hexencoded_data is not None:
-            if goc_version in (2,3,4):
+            if goc_version in (2,3,4,5):
                 DATA += "%08X" % (memory_address)
 
             DATA += hexencoded_data
@@ -189,7 +204,7 @@ class m3_common(object):
                 b = int(byte, 16)
                 if goc_version in (1,2):
                     data_parity ^= b
-                elif goc_version in (3,4):
+                elif goc_version in (3,4,5):
                     data_parity = (data_parity + b) & 0xFF
 
             if goc_version == 1:
@@ -214,6 +229,10 @@ class m3_common(object):
     @staticmethod
     def build_injection_message_for_goc_v4(**kwargs):
         return m3_common._build_injection_message(goc_version=4, **kwargs)
+
+    @staticmethod
+    def build_injection_message_for_goc_v5(**kwargs):
+        return m3_common._build_injection_message(goc_version=5, **kwargs)
 
     @staticmethod
     def build_injection_message_interrupt_for_goc_v1(hexencoded, run_after=True):
@@ -242,6 +261,14 @@ class m3_common(object):
     @staticmethod
     def build_injection_message_interrupt_for_goc_v4(hexencoded, run_after=True):
         return m3_common.build_injection_message_for_goc_v4(
+                hexencoded_data=hexencoded,
+                run_after=run_after,
+                memory_address=0x1E00,
+                )
+
+    @staticmethod
+    def build_injection_message_interrupt_for_goc_v5(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v5(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1E00,
@@ -480,6 +507,9 @@ class m3_common(object):
             elif self.args.goc_version == 4:
                 self.build_injection_message = self.build_injection_message_for_goc_v4
                 self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v4
+            elif self.args.goc_version == 5:
+                self.build_injection_message = self.build_injection_message_for_goc_v5
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v5
             else:
                 raise NotImplementedError("Bad GOC version?")
 
@@ -548,6 +578,9 @@ class m3_common(object):
             binfd = open(binfile, 'rb')
             hexencoded = binascii.hexlify(binfd.read()).upper()
 
+        if (len(hexencoded) % 2 == 0) and (len(hexencoded) % 4 != 0):
+            hexencoded += '00' # use of 8-bit variables can lead to byte-aligned bin files
+            
         if (len(hexencoded) % 4 == 0) and (len(hexencoded) % 8 != 0):
             # Image is halfword-aligned. Some tools generate these, but our system
             # assumes things are word-aligned. We pad an extra nop to the end to fix
@@ -615,6 +648,7 @@ class goc_programmer(object):
     CHIP_ID_MASK_DEFAULT=0xF
     BASEMODE_TRAINING_PULSES=12
     FASTMODE_TRAINING_PULSES=1000
+    PASSWORD_DEFAULT = 0x000000
 
 
     def __init__(self, m3_ice, parser):
@@ -675,6 +709,11 @@ class goc_programmer(object):
         parser.add_argument('--chip_id_mask',
                 help="Chip ID Mask of device to be GOC messaged (Hex)",
                 default=hex(goc_programmer.CHIP_ID_MASK_DEFAULT),
+                type=str,)
+
+        parser.add_argument('-p', '--password',
+                help="Password for CISv2 chips. (Hex)",
+                default=hex(goc_programmer.PASSWORD_DEFAULT),
                 type=str,)
 
 
@@ -757,6 +796,9 @@ class goc_programmer(object):
 
         chip_id, chip_id_mask = self._chip_id_parser(self.m3_ice.args)
 
+        passwd = self.m3_ice.args.password
+        passwd = int(passwd,16)
+
         addr = self.m3_ice.args.ADDRESS
         addr = addr.replace('0x', '')
         # Flip the order of addr bytes to make human entry friendly
@@ -790,6 +832,7 @@ class goc_programmer(object):
                 run_after=run_after,
                 chip_id = chip_id,
                 chip_id_mask = chip_id_mask,
+                password = passwd,
                 )
 
         logger.debug("Sending: " + message)
@@ -804,6 +847,8 @@ class goc_programmer(object):
 
         chip_id, chip_id_mask = self._chip_id_parser( self.m3_ice.args)
 
+        passwd = self.m3_ice.args.password
+        passwd = int(passwd,16)
 
         logger.info("")
         logger.info("Would you like to run after programming? If you do not")
@@ -820,7 +865,8 @@ class goc_programmer(object):
                         hexencoded_data=self.m3_ice.hexencoded, 
                         run_after=self.m3_ice.run_after,
                         chip_id = chip_id,
-                        chip_id_mask = chip_id_mask
+                        chip_id_mask = chip_id_mask,
+                        password = passwd
                         )
         logger.debug("Sending: " + message)
         self.send_goc_message(message)
@@ -848,7 +894,7 @@ class goc_programmer(object):
 
     def _goc_send(self, string, buffer_message=False):
         '''Internal helper to encode messages before sending to ICE. Expects hex strings.'''
-        if self.m3_ice.args.goc_version in (1,2,3):
+        if self.m3_ice.args.goc_version in (1,2,3,5):
             self.m3_ice.ice.goc_send(binascii.unhexlify(string))
         elif self.m3_ice.args.goc_version in (4,):
             if buffer_message:
@@ -865,21 +911,21 @@ class goc_programmer(object):
             raise NotImplementedError('bad goc version')
 
     def wake_chip(self):
-        if self.m3_ice.args.goc_version in (1,2,3):
+        if self.m3_ice.args.goc_version in (1,2,3,5):
             passcode_string = "7394"
-#           passcode_string = "3935"   # Reset request
+            #           passcode_string = "3935"   # Reset request
         elif self.m3_ice.args.goc_version in (4,):
             prefix = 'f' * int(math.ceil(self.m3_ice.args.basemode_training_pulses / 4))
             # Computer/ICE bridge cannot allow nibbles
             if len(prefix) % 2:
                 prefix += 'f'
-            passcode_string = prefix + "7254"
+                passcode_string = prefix + "7254"
         logger.info("Sending passcode to GOC")
         logger.debug("Sending:" + passcode_string)
         self._goc_send(passcode_string)
 
     def set_fast_frequency(self):
-        if self.m3_ice.args.goc_version in (1,2,3):
+        if self.m3_ice.args.goc_version in (1,2,3,5):
             self.m3_ice.ice.goc_set_frequency(8*self.m3_ice.args.goc_speed)
         elif self.m3_ice.args.goc_version in (4,):
             self.m3_ice.ice.goc_set_frequency(self.m3_ice.args.fastmode_speed)
@@ -892,7 +938,7 @@ class goc_programmer(object):
         self._goc_send(message)
         printing_sleep(0.5)
 
-        if self.m3_ice.args.goc_version in (1,2,3):
+        if self.m3_ice.args.goc_version in (1,2,3,5):
             logger.info("Sending extra blink to end transaction")
             extra = "80"
             logger.debug("Sending: " + extra)
