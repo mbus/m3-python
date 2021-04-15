@@ -238,11 +238,11 @@ class m3_common(object):
         return m3_common._build_injection_message(goc_version=5, **kwargs)
 
     @staticmethod
-    def build_injection_message_for_goc_v3r(**kwargs):
+    def build_injection_message_for_goc_v6(**kwargs):
         return m3_common._build_injection_message(goc_version=6, **kwargs)
 
     @staticmethod
-    def build_injection_message_for_goc_v5r(**kwargs):
+    def build_injection_message_for_goc_v7(**kwargs):
         return m3_common._build_injection_message(goc_version=7, **kwargs)
 
     @staticmethod
@@ -286,16 +286,16 @@ class m3_common(object):
                 )
 
     @staticmethod
-    def build_injection_message_interrupt_for_goc_v3r(hexencoded, run_after=True):
-        return m3_common.build_injection_message_for_goc_v3r(
+    def build_injection_message_interrupt_for_goc_v6(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v6(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1E00,
                 )
 
     @staticmethod
-    def build_injection_message_interrupt_for_goc_v5r(hexencoded, run_after=True):
-        return m3_common.build_injection_message_for_goc_v5r(
+    def build_injection_message_interrupt_for_goc_v7(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v7(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1E00,
@@ -541,11 +541,11 @@ class m3_common(object):
                 self.build_injection_message = self.build_injection_message_for_goc_v5
                 self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v5
             elif self.args.goc_version == 6:
-                self.build_injection_message = self.build_injection_message_for_goc_v3r
-                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v3r
+                self.build_injection_message = self.build_injection_message_for_goc_v6
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v6
             elif self.args.goc_version == 7:
-                self.build_injection_message = self.build_injection_message_for_goc_v5r
-                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v5r
+                self.build_injection_message = self.build_injection_message_for_goc_v7
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v7
             else:
                 raise NotImplementedError("Bad GOC version?")
 
