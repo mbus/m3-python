@@ -129,7 +129,7 @@ class m3_common(object):
             # Password
             password=0,
             ):
-        if goc_version not in (1,2,3,4,5):
+        if goc_version not in (1,2,3,4,5,39,59):
             raise NotImplementedError("Bad GOC Version?")
 
 
@@ -137,13 +137,13 @@ class m3_common(object):
             assert(False) # are we ever passing in None still?
             if goc_version == 1:
                 chip_id_mask = 0
-            elif goc_version in (2,3,4,5):
+            elif goc_version in (2,3,4,5,39,59):
                 chip_id_mask = 0xF
 
 
         HEADER = ''
 
-        if goc_version == 5:
+        if goc_version in (5, 59):
             #Password 24bits
             #password_byte10 = 0x00
             #password_byte32 = 0x00
@@ -156,7 +156,7 @@ class m3_common(object):
             HEADER += "%02X" % (password_byte54)
 
         # Control Byte
-        if goc_version in (6,7):
+        if goc_version in (39,59):
             reset_request = 1
         
         control = chip_id_mask |\
@@ -176,7 +176,7 @@ class m3_common(object):
         # Program Length
         if hexencoded_data is not None:
             length = len(hexencoded_data) >> 3   # hex exapnded -> bytes, /2
-            if goc_version in (2,3,4,5):
+            if goc_version in (2,3,4,5,39,59):
                 length -= 1
                 assert length >= 0
             length = socket.htons(length)
@@ -190,13 +190,13 @@ class m3_common(object):
             byte = int(byte, 16)
             if goc_version in (1,2):
                 header_parity ^= byte
-            elif goc_version in (3,4,5):
+            elif goc_version in (3,4,5,39,59):
                 header_parity = (header_parity + byte) & 0xFF
         HEADER += "%02X" % (header_parity)
 
         DATA = ''
         if hexencoded_data is not None:
-            if goc_version in (2,3,4,5):
+            if goc_version in (2,3,4,5,39,59):
                 DATA += "%08X" % (memory_address)
 
             DATA += hexencoded_data
@@ -207,7 +207,7 @@ class m3_common(object):
                 b = int(byte, 16)
                 if goc_version in (1,2):
                     data_parity ^= b
-                elif goc_version in (3,4,5):
+                elif goc_version in (3,4,5,39,59):
                     data_parity = (data_parity + b) & 0xFF
 
             if goc_version == 1:
@@ -238,12 +238,12 @@ class m3_common(object):
         return m3_common._build_injection_message(goc_version=5, **kwargs)
 
     @staticmethod
-    def build_injection_message_for_goc_v6(**kwargs):
-        return m3_common._build_injection_message(goc_version=6, **kwargs)
+    def build_injection_message_for_goc_v39(**kwargs):
+        return m3_common._build_injection_message(goc_version=39, **kwargs)
 
     @staticmethod
-    def build_injection_message_for_goc_v7(**kwargs):
-        return m3_common._build_injection_message(goc_version=7, **kwargs)
+    def build_injection_message_for_goc_v59(**kwargs):
+        return m3_common._build_injection_message(goc_version=59, **kwargs)
 
     @staticmethod
     def build_injection_message_interrupt_for_goc_v1(hexencoded, run_after=True):
@@ -286,16 +286,16 @@ class m3_common(object):
                 )
 
     @staticmethod
-    def build_injection_message_interrupt_for_goc_v6(hexencoded, run_after=True):
-        return m3_common.build_injection_message_for_goc_v6(
+    def build_injection_message_interrupt_for_goc_v39(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v39(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1E00,
                 )
 
     @staticmethod
-    def build_injection_message_interrupt_for_goc_v7(hexencoded, run_after=True):
-        return m3_common.build_injection_message_for_goc_v7(
+    def build_injection_message_interrupt_for_goc_v59(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v59(
                 hexencoded_data=hexencoded,
                 run_after=run_after,
                 memory_address=0x1E00,
@@ -317,7 +317,7 @@ class m3_common(object):
         is_i2c = 1                      #   [6] Indicates transmission is I2C message [addr+data]
         run_after = not not run_after   #   [7] Run code after programming?
 
-        if goc_version in (6,7):
+        if goc_version in (39,59):
             reset = 1
         # Byte 0: Control
         control = chip_id_mask | (reset << 4) | (chip_id_coding << 5) | (is_i2c << 6) | (run_after << 7)
@@ -540,12 +540,12 @@ class m3_common(object):
             elif self.args.goc_version == 5:
                 self.build_injection_message = self.build_injection_message_for_goc_v5
                 self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v5
-            elif self.args.goc_version == 6:
-                self.build_injection_message = self.build_injection_message_for_goc_v6
-                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v6
-            elif self.args.goc_version == 7:
-                self.build_injection_message = self.build_injection_message_for_goc_v7
-                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v7
+            elif self.args.goc_version == 39:
+                self.build_injection_message = self.build_injection_message_for_goc_v39
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v39
+            elif self.args.goc_version == 59:
+                self.build_injection_message = self.build_injection_message_for_goc_v59
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v59
             else:
                 raise NotImplementedError("Bad GOC version?")
 
@@ -930,7 +930,7 @@ class goc_programmer(object):
 
     def _goc_send(self, string, buffer_message=False):
         '''Internal helper to encode messages before sending to ICE. Expects hex strings.'''
-        if self.m3_ice.args.goc_version in (1,2,3,5):
+        if self.m3_ice.args.goc_version in (1,2,3,5,39,59):
             self.m3_ice.ice.goc_send(binascii.unhexlify(string))
         elif self.m3_ice.args.goc_version in (4,):
             if buffer_message:
@@ -947,7 +947,7 @@ class goc_programmer(object):
             raise NotImplementedError('bad goc version')
 
     def wake_chip(self):
-        if self.m3_ice.args.goc_version in (1,2,3,5):
+        if self.m3_ice.args.goc_version in (1,2,3,5,39,59):
             passcode_string = "7394"
             #           passcode_string = "3935"   # Reset request
         elif self.m3_ice.args.goc_version in (4,):
@@ -961,7 +961,7 @@ class goc_programmer(object):
         self._goc_send(passcode_string)
 
     def set_fast_frequency(self):
-        if self.m3_ice.args.goc_version in (1,2,3,5):
+        if self.m3_ice.args.goc_version in (1,2,3,5,39,59):
             self.m3_ice.ice.goc_set_frequency(8*self.m3_ice.args.goc_speed)
         elif self.m3_ice.args.goc_version in (4,):
             self.m3_ice.ice.goc_set_frequency(self.m3_ice.args.fastmode_speed)
@@ -974,7 +974,7 @@ class goc_programmer(object):
         self._goc_send(message)
         printing_sleep(0.5)
 
-        if self.m3_ice.args.goc_version in (1,2,3,5):
+        if self.m3_ice.args.goc_version in (1,2,3,5,39,59):
             logger.info("Sending extra blink to end transaction")
             extra = "80"
             logger.debug("Sending: " + extra)
