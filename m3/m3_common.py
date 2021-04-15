@@ -156,6 +156,9 @@ class m3_common(object):
             HEADER += "%02X" % (password_byte54)
 
         # Control Byte
+        if goc_version in (6,7):
+            reset_request = 1
+        
         control = chip_id_mask |\
                 (reset_request << 4) |\
                 (chip_id_coding << 5) |\
@@ -235,6 +238,14 @@ class m3_common(object):
         return m3_common._build_injection_message(goc_version=5, **kwargs)
 
     @staticmethod
+    def build_injection_message_for_goc_v3r(**kwargs):
+        return m3_common._build_injection_message(goc_version=6, **kwargs)
+
+    @staticmethod
+    def build_injection_message_for_goc_v5r(**kwargs):
+        return m3_common._build_injection_message(goc_version=7, **kwargs)
+
+    @staticmethod
     def build_injection_message_interrupt_for_goc_v1(hexencoded, run_after=True):
         return m3_common.build_injection_message(
                 hexencoded_data=hexencoded,
@@ -275,6 +286,22 @@ class m3_common(object):
                 )
 
     @staticmethod
+    def build_injection_message_interrupt_for_goc_v3r(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v3r(
+                hexencoded_data=hexencoded,
+                run_after=run_after,
+                memory_address=0x1E00,
+                )
+
+    @staticmethod
+    def build_injection_message_interrupt_for_goc_v5r(hexencoded, run_after=True):
+        return m3_common.build_injection_message_for_goc_v5r(
+                hexencoded_data=hexencoded,
+                run_after=run_after,
+                memory_address=0x1E00,
+                )
+
+    @staticmethod
     def build_injection_message_custom(mem_addr_custom, hexencoded, run_after):
         return m3_common.build_injection_message(
                 hexencoded_data=hexencoded,
@@ -289,6 +316,9 @@ class m3_common(object):
         chip_id_coding = 0              #   [5] Chip ID coding
         is_i2c = 1                      #   [6] Indicates transmission is I2C message [addr+data]
         run_after = not not run_after   #   [7] Run code after programming?
+
+        if goc_version in (6,7):
+            reset = 1
         # Byte 0: Control
         control = chip_id_mask | (reset << 4) | (chip_id_coding << 5) | (is_i2c << 6) | (run_after << 7)
 
@@ -510,6 +540,12 @@ class m3_common(object):
             elif self.args.goc_version == 5:
                 self.build_injection_message = self.build_injection_message_for_goc_v5
                 self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v5
+            elif self.args.goc_version == 6:
+                self.build_injection_message = self.build_injection_message_for_goc_v3r
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v3r
+            elif self.args.goc_version == 7:
+                self.build_injection_message = self.build_injection_message_for_goc_v5r
+                self.build_injection_message_interrupt = self.build_injection_message_interrupt_for_goc_v5r
             else:
                 raise NotImplementedError("Bad GOC version?")
 
