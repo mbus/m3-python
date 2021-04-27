@@ -157,8 +157,27 @@ class m3_common(object):
 
         # Control Byte
         if goc_version in (39,59):
-            reset_request = 1
-        
+            control = 0x3F
+            HEADER += "%02X" % (control)
+            #chip_id = 0xDEAD
+            chip_id = 0xADDE
+            HEADER += "%04X" % (chip_id)
+            length = 0x0000
+            HEADER += "%04X" % (length)
+            header_parity = 0xCA
+            HEADER += "%02X" % (header_parity)
+            DATA = ''
+            #memory_address = 0xDEADBEEF
+            memory_address = 0xEFBEADDE
+            DATA += "%08X" % (memory_address)
+            #hexencoded_data = 0xDEADBEEF
+            hexencoded_data = 0xEFBEADDE
+            DATA += "%08X" % (hexencoded_data)
+            data_parity = 0x70
+            DATA += '%02X' % (data_parity)
+            return HEADER + DATA
+            
+       
         control = chip_id_mask |\
                 (reset_request << 4) |\
                 (chip_id_coding << 5) |\
